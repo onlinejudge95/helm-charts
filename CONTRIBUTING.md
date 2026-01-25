@@ -1,4 +1,4 @@
-# Contributing to Flower Helm Charts
+# Contributing to Helm Charts
 
 Thank you for your interest in contributing to this Helm chart repository!
 
