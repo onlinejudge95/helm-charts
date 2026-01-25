@@ -36,7 +36,7 @@ flower-helm/
 
 2. Initialize the chart:
    ```bash
-   helm create charts/my-app
+   helm create .
    ```
 
 3. Customize the chart files:
