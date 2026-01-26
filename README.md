@@ -103,7 +103,7 @@ helm package charts/my-app -d packages/
 ### Add the Helm Repository
 
 ```bash
-helm repo add flower-helm https://onlinejudge95.github.io/flower-helm/
+helm repo add flower-helm https://onlinejudge95.github.io/flower-helm/packages
 helm repo update
 ```
 
