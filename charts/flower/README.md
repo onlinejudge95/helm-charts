@@ -112,7 +112,7 @@ resources:
 | `flower.basicAuth.enabled` | Enable basic authentication | `false` |
 | `flower.basicAuth.username` | Basic auth username | `""` |
 | `flower.basicAuth.password` | Basic auth password | `""` |
-| `flower.persistent` | Enable persistent mode | `true` |
+| `flower.persistent` | Enable persistent mode | `false` |
 | `flower.dbFile` | Database file path | `/data/flower.db` |
 | `flower.maxTasks` | Max tasks to keep in memory | `10000` |
 | `flower.port` | Flower port | `5555` |
