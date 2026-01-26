@@ -19,6 +19,6 @@ done
 
 # Generate/update the index
 echo "Generating Helm repository index..."
-helm repo index "$PACKAGES_DIR" --url https://onlinejudge95.github.io/flower-helm/
+helm repo index "$PACKAGES_DIR" --url https://onlinejudge95.github.io/flower-helm/packages/
 
 echo "Done! Charts packaged in $PACKAGES_DIR/"
