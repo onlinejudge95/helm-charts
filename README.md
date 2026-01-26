@@ -19,8 +19,8 @@ flower-helm/
 │   └── lint-charts.sh        # Lint all charts
 ├── packages/                  # Generated chart packages (gitignored)
 ├── .github/workflows/        # CI/CD workflows
-│   ├── release.yml           # Auto-release on main branch
-│   └── lint.yml              # Lint on PRs
+│   ├── ci.yml                # Continuous integration (tests, linting)
+│   └── cd.yml                # Continuous delivery/deployment
 ├── ct.yaml                   # Chart testing configuration
 └── .helmignore               # Files to ignore in packages
 
