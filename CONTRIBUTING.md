@@ -116,7 +116,6 @@ All submissions require review. We use GitHub pull requests for this purpose.
 Your pull request will automatically trigger:
 - Chart linting
 - Template validation
-- Documentation checks
 
 Ensure all checks pass before requesting review.
 
