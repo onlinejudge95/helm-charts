@@ -23,9 +23,9 @@
 
 {{- if .Values.flower.basicAuth.enabled }}
 
-2. Flower is protected with basic authentication:
-   Username: {{ .Values.flower.basicAuth.username }}
-   Password: <configured in secret>
+2. Flower is protected with basic authentication.
+   The username and password are configured via your Helm values or a Kubernetes Secret.
+   Please refer to your values configuration or Secret to retrieve them.
 {{- end }}
 
 {{- if not .Values.celery.brokerUrl }}
