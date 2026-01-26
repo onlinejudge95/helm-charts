@@ -139,10 +139,13 @@ flower:
     passwordKey: "password"
 
   # Persistent tasks
-  # Enable together with persistence.enabled to store data on a volume
+  # IMPORTANT: When set to true, you MUST also set persistence.enabled=true,
+  # otherwise Flower will attempt to write to flower.db on a read-only root filesystem
+  # (see securityContext.readOnlyRootFilesystem) and the pod will fail.
   persistent: false
 
-  # Database file for persistent mode (SQLite)
+  # Database file for persistent mode (SQLite). The /data path requires the
+  # corresponding persistence volume to be mounted (persistence.enabled=true).
   dbFile: "/data/flower.db"
 
   # Max number of tasks to keep in memory
