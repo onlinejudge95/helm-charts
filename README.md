@@ -103,26 +103,26 @@ helm package charts/my-app -d packages/
 ### Add the Helm Repository
 
 ```bash
-helm repo add flower-helm https://onlinejudge95.github.io/flower-helm/packages
+helm repo add onlinejudge95 https://onlinejudge95.github.io/helm-charts/packages
 helm repo update
 ```
 
 ### Install a Chart
 
 ```bash
-helm install my-release flower-helm/my-app
+helm install my-release onlinejudge95/my-app
 ```
 
 ### Install with Custom Values
 
 ```bash
-helm install my-release flower-helm/my-app -f custom-values.yaml
+helm install my-release onlinejudge95/my-app -f custom-values.yaml
 ```
 
 ### Upgrade a Release
 
 ```bash
-helm upgrade my-release flower-helm/my-app
+helm upgrade my-release onlinejudge95/my-app
 ```
 
 ### Uninstall a Release
