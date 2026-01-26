@@ -163,4 +163,4 @@ The release workflow uses [chart-releaser](https://github.com/helm/chart-release
 
 ## License
 
-[Add your license information here]
+This project is licensed under the terms described in the LICENSE file in this repository.
