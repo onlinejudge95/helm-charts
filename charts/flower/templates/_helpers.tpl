@@ -60,19 +60,6 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Get the broker URL
-*/}}
-{{- define "flower.brokerUrl" -}}
-{{- if .Values.celery.brokerUrlSecretName }}
-{{- printf "valueFrom:\n  secretKeyRef:\n    name: %s\n    key: %s" .Values.celery.brokerUrlSecretName .Values.celery.brokerUrlSecretKey | nindent 10 }}
-{{- else if .Values.celery.brokerUrl }}
-{{- .Values.celery.brokerUrl | quote }}
-{{- else }}
-{{- fail "Either celery.brokerUrl or celery.brokerUrlSecretName must be set" }}
-{{- end }}
-{{- end }}
-
-{{/*
 Get the image tag
 */}}
 {{- define "flower.imageTag" -}}
