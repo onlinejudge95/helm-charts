@@ -1,5 +1,6 @@
 {{- include "flower.validateBasicAuth" . -}}
 {{- include "flower.validatePersistence" . -}}
+{{- include "flower.validateBrokerUrl" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
