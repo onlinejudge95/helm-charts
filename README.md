@@ -103,7 +103,7 @@ helm package charts/my-app -d packages/
 ### Add the Helm Repository
 
 ```bash
-helm repo add onlinejudge95 https://onlinejudge95.github.io/helm-charts/packages
+helm repo add onlinejudge95 https://onlinejudge95.github.io/helm-charts
 helm repo update
 ```
 
