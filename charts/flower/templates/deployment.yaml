@@ -37,7 +37,7 @@ spec:
             - celery
           args:
             - flower
-            - --broker={{ .Values.celery.brokerUrl }}
+            - --broker=$(CELERY_BROKER_URL)
             - --port={{ .Values.flower.port }}
             {{- if .Values.flower.persistent }}
             - --persistent=True
@@ -60,6 +60,15 @@ spec:
               containerPort: {{ .Values.flower.port }}
               protocol: TCP
           env:
+            - name: CELERY_BROKER_URL
+              {{- if .Values.celery.brokerUrlSecretName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.celery.brokerUrlSecretName }}
+                  key: {{ .Values.celery.brokerUrlSecretKey }}
+              {{- else }}
+              value: {{ .Values.celery.brokerUrl | quote }}
+              {{- end }}
             {{- if .Values.flower.basicAuth.enabled }}
             - name: FLOWER_BASIC_AUTH_USERNAME
               valueFrom:
