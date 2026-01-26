@@ -218,6 +218,11 @@ ingress:
 helm install flower ./flower -f production-values.yaml
 ```
 
+> [!NOTE]
+> When `flower.urlPrefix` is configured, health check probe paths are
+> automatically prefixed. For example, with `urlPrefix: /flower`, the
+> probe path becomes `/flower/healthcheck` instead of `/healthcheck`.
+
 ## Upgrading
 
 ```bash

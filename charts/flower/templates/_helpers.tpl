@@ -78,3 +78,14 @@ Validate basic auth configuration
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Get probe path with urlPrefix if configured
+*/}}
+{{- define "flower.probePath" -}}
+{{- if .Values.flower.urlPrefix -}}
+{{- printf "%s%s" .Values.flower.urlPrefix .path -}}
+{{- else -}}
+{{- .path -}}
+{{- end -}}
+{{- end }}

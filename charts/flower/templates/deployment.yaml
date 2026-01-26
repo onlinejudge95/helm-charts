@@ -89,7 +89,7 @@ spec:
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.httpGet.path }}
+              path: {{ include "flower.probePath" (dict "Values" .Values "path" .Values.livenessProbe.httpGet.path) }}
               port: {{ .Values.livenessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
@@ -99,7 +99,7 @@ spec:
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.httpGet.path }}
+              path: {{ include "flower.probePath" (dict "Values" .Values "path" .Values.readinessProbe.httpGet.path) }}
               port: {{ .Values.readinessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
