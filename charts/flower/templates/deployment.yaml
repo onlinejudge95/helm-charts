@@ -1,0 +1,149 @@
+{{- include "flower.validateBasicAuth" . -}}
+{{- include "flower.validatePersistence" . -}}
+{{- include "flower.validateBrokerUrl" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "flower.fullname" . }}
+  labels:
+    {{- include "flower.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "flower.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if not .Values.flower.basicAuth.existingSecret }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "flower.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "flower.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ include "flower.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - celery
+          args:
+            - flower
+            - --broker=$(CELERY_BROKER_URL)
+            - --port={{ .Values.flower.port }}
+            {{- if .Values.flower.persistent }}
+            - --persistent=True
+            - --db={{ .Values.flower.dbFile }}
+            {{- end }}
+            {{- if .Values.flower.maxTasks }}
+            - --max_tasks={{ .Values.flower.maxTasks }}
+            {{- end }}
+            {{- if .Values.flower.urlPrefix }}
+            - --url_prefix={{ .Values.flower.urlPrefix }}
+            {{- end }}
+            {{- if .Values.flower.basicAuth.enabled }}
+            - --basic_auth=$(FLOWER_BASIC_AUTH_USERNAME):$(FLOWER_BASIC_AUTH_PASSWORD)
+            {{- end }}
+            {{- with .Values.flower.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.flower.port }}
+              protocol: TCP
+          env:
+            - name: CELERY_BROKER_URL
+              {{- if .Values.celery.brokerUrlSecretName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.celery.brokerUrlSecretName }}
+                  key: {{ .Values.celery.brokerUrlSecretKey }}
+              {{- else }}
+              value: {{ .Values.celery.brokerUrl | quote }}
+              {{- end }}
+            {{- if .Values.flower.basicAuth.enabled }}
+            - name: FLOWER_BASIC_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.flower.basicAuth.existingSecret | default (printf "%s-auth" (include "flower.fullname" .)) }}
+                  key: {{ .Values.flower.basicAuth.usernameKey }}
+            - name: FLOWER_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.flower.basicAuth.existingSecret | default (printf "%s-auth" (include "flower.fullname" .)) }}
+                  key: {{ .Values.flower.basicAuth.passwordKey }}
+            {{- end }}
+            {{- with .Values.flower.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ include "flower.probePath" (dict "Values" .Values "path" .Values.livenessProbe.httpGet.path) }}
+              port: {{ .Values.livenessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ include "flower.probePath" (dict "Values" .Values "path" .Values.readinessProbe.httpGet.path) }}
+              port: {{ .Values.readinessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /data
+            {{- end }}
+            {{- if .Values.securityContext.readOnlyRootFilesystem }}
+            - name: tmp
+              mountPath: /tmp
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "flower.fullname" .) }}
+        {{- end }}
+        {{- if .Values.securityContext.readOnlyRootFilesystem }}
+        - name: tmp
+          emptyDir: {}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
