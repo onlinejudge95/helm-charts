@@ -89,3 +89,12 @@ Get probe path with urlPrefix if configured
 {{- .path -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+Validate persistence configuration
+*/}}
+{{- define "flower.validatePersistence" -}}
+{{- if and .Values.flower.persistent (not .Values.persistence.enabled) }}
+{{- fail "When flower.persistent is true, persistence.enabled must also be true. The /data directory requires a writable volume mount, otherwise the pod will fail due to readOnlyRootFilesystem security context." }}
+{{- end }}
+{{- end }}
