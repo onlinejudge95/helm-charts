@@ -65,3 +65,16 @@ Get the image tag
 {{- define "flower.imageTag" -}}
 {{- .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
+
+{{/*
+Validate basic auth configuration
+*/}}
+{{- define "flower.validateBasicAuth" -}}
+{{- if .Values.flower.basicAuth.enabled }}
+{{- if not .Values.flower.basicAuth.existingSecret }}
+{{- if or (not .Values.flower.basicAuth.username) (not .Values.flower.basicAuth.password) }}
+{{- fail "When flower.basicAuth.enabled is true and flower.basicAuth.existingSecret is not set, both flower.basicAuth.username and flower.basicAuth.password must be provided" }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
