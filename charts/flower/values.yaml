@@ -179,9 +179,14 @@ persistence:
 configMap:
   enabled: false
   # Additional configuration files to mount
+  # Data must be string key-value pairs
   data: {}
-  # flowerconfig.py: |
-  #   # Custom Flower configuration
+  # Example:
+  # data:
+  #   flowerconfig.py: |
+  #     # Custom Flower configuration
+  #     # This is a Python configuration file
+  #     broker_api = 'http://localhost:5555/api/'
 
 # Additional volumes
 extraVolumes: []
