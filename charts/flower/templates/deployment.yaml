@@ -38,8 +38,8 @@ spec:
           command:
             - celery
           args:
-            - --broker={{ .Values.celery.brokerUrl }}
             - flower
+            - --broker={{ .Values.celery.brokerUrl }}
             - --port={{ .Values.flower.port }}
             {{- if .Values.flower.persistent }}
             - --persistent=True
