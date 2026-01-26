@@ -2,7 +2,7 @@ apiVersion: v2
 name: flower
 description: A Helm chart for deploying Celery Flower - a real-time monitoring tool for Celery
 type: application
-version: 0.1.0
+version: "0.1.0"
 appVersion: "2.0.1"
 keywords:
   - celery
