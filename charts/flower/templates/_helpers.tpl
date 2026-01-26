@@ -98,3 +98,12 @@ Validate persistence configuration
 {{- fail "When flower.persistent is true, persistence.enabled must also be true. The /data directory requires a writable volume mount, otherwise the pod will fail due to readOnlyRootFilesystem security context." }}
 {{- end }}
 {{- end }}
+
+{{/*
+Validate broker URL configuration
+*/}}
+{{- define "flower.validateBrokerUrl" -}}
+{{- if and (not .Values.celery.brokerUrl) (not .Values.celery.brokerUrlSecretName) }}
+{{- fail "Either celery.brokerUrl or celery.brokerUrlSecretName must be configured. Flower requires a Celery broker URL to function." }}
+{{- end }}
+{{- end }}
