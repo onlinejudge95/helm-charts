@@ -192,15 +192,27 @@ configMap:
   #     # Custom Flower configuration
   #     # This is a Python configuration file
   #     broker_api = 'http://localhost:5555/api/'
+  #
+  # IMPORTANT: You must also configure extraVolumes and extraVolumeMounts
+  # to actually mount this ConfigMap into the pod. See examples below.
 
 # Additional volumes
 extraVolumes: []
-# - name: config
-#   configMap:
-#     name: flower-config
+# Example: Mount the ConfigMap created above
+# extraVolumes:
+#   - name: config
+#     configMap:
+#       name: '{{ include "flower.fullname" . }}'
 
 # Additional volume mounts
 extraVolumeMounts: []
-# - name: config
-#   mountPath: /config
-#   readOnly: true
+# Example: Mount the config volume at /config
+# extraVolumeMounts:
+#   - name: config
+#     mountPath: /config
+#     readOnly: true
+#
+# Then reference the config file in flower.extraArgs:
+# flower:
+#   extraArgs:
+#     - --conf=/config/flowerconfig.py

@@ -94,6 +94,37 @@ resources:
     memory: 256Mi
 ```
 
+#### Use Custom Configuration File
+
+To use a custom Flower configuration file via ConfigMap:
+
+```yaml
+# Create the ConfigMap with your config file
+configMap:
+  enabled: true
+  data:
+    flowerconfig.py: |
+      # Custom Flower configuration
+      broker_api = 'http://localhost:5555/api/'
+      max_workers = 100
+
+# Mount the ConfigMap as a volume
+extraVolumes:
+  - name: config
+    configMap:
+      name: '{{ include "flower.fullname" . }}'
+
+extraVolumeMounts:
+  - name: config
+    mountPath: /config
+    readOnly: true
+
+# Reference the config file in Flower arguments
+flower:
+  extraArgs:
+    - --conf=/config/flowerconfig.py
+```
+
 ### All Configuration Options
 
 | Parameter | Description | Default |
