@@ -94,16 +94,6 @@ resources:
     memory: 256Mi
 ```
 
-#### Enable Autoscaling
-
-```yaml
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-```
-
 ### All Configuration Options
 
 | Parameter | Description | Default |
@@ -133,9 +123,6 @@ autoscaling:
 | `resources.limits.memory` | Memory limit | `512Mi` |
 | `resources.requests.cpu` | CPU request | `100m` |
 | `resources.requests.memory` | Memory request | `128Mi` |
-| `autoscaling.enabled` | Enable HPA | `false` |
-| `autoscaling.minReplicas` | Minimum replicas | `1` |
-| `autoscaling.maxReplicas` | Maximum replicas | `10` |
 
 ## Examples
 
@@ -209,12 +196,6 @@ resources:
   requests:
     cpu: 500m
     memory: 512Mi
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 70
 
 ingress:
   enabled: true
