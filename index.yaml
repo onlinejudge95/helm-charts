@@ -1,0 +1,26 @@
+apiVersion: v1
+entries:
+  flower:
+  - apiVersion: v2
+    appVersion: 2.0.1
+    created: "2026-01-26T16:31:13.222903426Z"
+    description: A Helm chart for deploying Celery Flower - a real-time monitoring
+      tool for Celery
+    digest: 1fc358e88d4625c704ba6877d5aef527e673443454a5ed6d31dff693276c163e
+    home: https://github.com/onlinejudge95/helm-charts
+    keywords:
+    - celery
+    - flower
+    - monitoring
+    - task-queue
+    maintainers:
+    - email: onlinejudge95@gmail.com
+      name: onlinejudge95
+    name: flower
+    sources:
+    - https://github.com/mher/flower
+    type: application
+    urls:
+    - https://github.com/onlinejudge95/helm-charts/releases/download/flower-0.1.0/flower-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-01-26T16:31:13.222909605Z"
