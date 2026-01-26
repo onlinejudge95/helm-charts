@@ -9,13 +9,3 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
-
-  # Maintain dependencies for Helm charts
-  - package-ecosystem: "docker"
-    directory: "/charts"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-      - "helm"
