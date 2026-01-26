@@ -51,8 +51,6 @@ service:
   type: ClusterIP
   # Service port
   port: 5555
-  # Target port on the container
-  targetPort: 5555
   # Annotations for the service
   annotations: {}
 
