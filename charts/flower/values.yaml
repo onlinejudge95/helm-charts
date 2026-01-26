@@ -162,12 +162,6 @@ flower:
   # URL prefix
   urlPrefix: ""
   
-  # Enable/disable auto-refresh
-  autoRefresh: true
-  
-  # Refresh interval in seconds
-  refreshInterval: 60
-  
   # Additional environment variables
   extraEnv: []
   # - name: FLOWER_DEBUG
