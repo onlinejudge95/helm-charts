@@ -27,7 +27,8 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # If not set and create is true, a name is generated using the
+  # fullname template
   name: ""
 
 # Pod annotations
@@ -41,7 +42,7 @@ podSecurityContext:
 securityContext:
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1000
@@ -136,27 +137,28 @@ flower:
     existingSecret: ""
     usernameKey: "username"
     passwordKey: "password"
-  
-  # Persistent tasks (enable together with persistence.enabled to store data on a volume)
+
+  # Persistent tasks
+  # Enable together with persistence.enabled to store data on a volume
   persistent: false
-  
+
   # Database file for persistent mode (SQLite)
   dbFile: "/data/flower.db"
-  
+
   # Max number of tasks to keep in memory
   maxTasks: 10000
-  
+
   # Port number
   port: 5555
-  
+
   # URL prefix
   urlPrefix: ""
-  
+
   # Additional environment variables
   extraEnv: []
   # - name: FLOWER_DEBUG
   #   value: "true"
-  
+
   # Additional command line arguments
   extraArgs: []
   # - --conf=/config/flowerconfig.py
