@@ -202,7 +202,7 @@ helm install flower ./flower -f values.yaml
 
 ```yaml
 # production-values.yaml
-replicaCount: 2
+replicaCount: 1
 
 celery:
   brokerUrlSecretName: celery-broker-secret
