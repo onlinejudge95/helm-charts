@@ -147,8 +147,8 @@ flower:
     usernameKey: "username"
     passwordKey: "password"
   
-  # Persistent tasks
-  persistent: true
+  # Persistent tasks (enable together with persistence.enabled to store data on a volume)
+  persistent: false
   
   # Database file for persistent mode (SQLite)
   dbFile: "/data/flower.db"
