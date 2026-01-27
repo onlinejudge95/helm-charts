@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # Number of etcd replicas (should be odd number for quorum: 1, 3, 5, etc.)
-replicaCount: 3
+replicaCount: 1
 
 image:
   # Docker image repository
