@@ -64,6 +64,11 @@ spec:
               containerPort: {{ .Values.flower.port }}
               protocol: TCP
           env:
+            # Override Kubernetes-injected FLOWER_PORT service variable
+            # which would otherwise contain 'tcp://IP:PORT' and cause a ValueError
+            # when Flower tries to parse it as an integer
+            - name: FLOWER_PORT
+              value: {{ .Values.flower.port | quote }}
             - name: CELERY_BROKER_URL
               {{- if .Values.celery.brokerUrlSecretName }}
               valueFrom:
