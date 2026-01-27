@@ -39,9 +39,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - celery
+            - --broker=$(CELERY_BROKER_URL)
           args:
             - flower
-            - --broker=$(CELERY_BROKER_URL)
             - --port={{ .Values.flower.port }}
             {{- if .Values.flower.persistent }}
             - --persistent=True
