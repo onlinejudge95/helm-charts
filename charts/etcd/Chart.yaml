@@ -1,0 +1,17 @@
+apiVersion: v2
+name: etcd
+description: A Helm chart for deploying etcd - a distributed reliable key-value store
+type: application
+version: "0.1.0"
+appVersion: "v3.6.7"
+keywords:
+  - etcd
+  - key-value
+  - distributed
+  - database
+home: https://github.com/onlinejudge95/helm-charts
+sources:
+  - https://github.com/etcd-io/etcd
+maintainers:
+  - name: onlinejudge95
+    email: onlinejudge95@gmail.com

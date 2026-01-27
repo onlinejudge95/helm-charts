@@ -1,0 +1,41 @@
+1. Get the etcd cluster status by running:
+
+  kubectl exec -it {{ include "etcd.fullname" . }}-0 -n {{ .Release.Namespace }} -- etcdctl endpoint health
+
+2. Access etcd from within the cluster using:
+
+  Client URL: http://{{ include "etcd.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.clientPort }}
+
+3. To connect to etcd from a pod, use etcdctl:
+
+  kubectl run etcd-client --rm -it --restart=Never \
+    --image=quay.io/coreos/etcd:{{ include "etcd.imageTag" . }} \
+    --env ETCDCTL_API=3 \
+    --command -- /bin/sh
+
+  Then inside the pod:
+  etcdctl --endpoints=http://{{ include "etcd.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.clientPort }} put mykey "Hello etcd"
+  etcdctl --endpoints=http://{{ include "etcd.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.clientPort }} get mykey
+
+4. Check cluster member list:
+
+  kubectl exec -it {{ include "etcd.fullname" . }}-0 -n {{ .Release.Namespace }} -- \
+    etcdctl --endpoints=http://localhost:{{ .Values.service.clientPort }} member list
+
+{{- if .Values.persistence.enabled }}
+
+5. Persistent storage is enabled. Data will be stored in PersistentVolumeClaims.
+{{- else }}
+
+5. WARNING: Persistence is disabled. Data will be lost when pods are deleted!
+{{- end }}
+
+{{- if .Values.auth.rbac.enabled }}
+
+6. RBAC authentication is enabled. Use the root password to authenticate:
+
+  kubectl get secret {{ .Values.auth.rbac.existingSecret | default (printf "%s-auth" (include "etcd.fullname" .)) }} \
+    -n {{ .Release.Namespace }} -o jsonpath='{.data.{{ .Values.auth.rbac.passwordKey }}}' | base64 -d
+{{- end }}
+
+For more information, visit: https://etcd.io/docs/

@@ -1,0 +1,165 @@
+{{- include "etcd.validateReplicaCount" . -}}
+{{- include "etcd.validateAuth" . -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "etcd.fullname" . }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "etcd.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "etcd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "etcd.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "etcd.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ include "etcd.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/local/bin/etcd
+          args:
+            - --name=$(POD_NAME)
+            - --listen-peer-urls=http://0.0.0.0:{{ .Values.service.peerPort }}
+            - --listen-client-urls=http://0.0.0.0:{{ .Values.service.clientPort }}
+            - --advertise-client-urls=http://$(POD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.clientPort }}
+            - --initial-advertise-peer-urls=http://$(POD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.peerPort }}
+            - --initial-cluster={{ include "etcd.initialCluster" . }}
+            - --initial-cluster-state={{ .Values.etcd.initialClusterState }}
+            - --initial-cluster-token={{ .Values.etcd.initialClusterToken }}
+            - --data-dir=/var/run/etcd/default.etcd
+            - --auto-compaction-retention={{ .Values.etcd.autoCompactionRetention }}
+            - --auto-compaction-mode={{ .Values.etcd.autoCompactionMode }}
+            - --snapshot-count={{ .Values.etcd.snapshotCount }}
+            - --quota-backend-bytes={{ .Values.etcd.quotaBackendBytes }}
+            - --max-request-bytes={{ .Values.etcd.maxRequestBytes }}
+            - --heartbeat-interval={{ .Values.etcd.heartbeatInterval }}
+            - --election-timeout={{ .Values.etcd.electionTimeout }}
+            {{- with .Values.etcd.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: client
+              containerPort: {{ .Values.service.clientPort }}
+              protocol: TCP
+            - name: peer
+              containerPort: {{ .Values.service.peerPort }}
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if .Values.auth.rbac.enabled }}
+            - name: ETCD_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.rbac.existingSecret | default (printf "%s-auth" (include "etcd.fullname" .)) }}
+                  key: {{ .Values.auth.rbac.passwordKey }}
+            {{- end }}
+            {{- with .Values.etcd.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.httpGet.path }}
+              port: {{ .Values.livenessProbe.httpGet.port }}
+              scheme: {{ .Values.livenessProbe.httpGet.scheme }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.httpGet.path }}
+              port: {{ .Values.readinessProbe.httpGet.port }}
+              scheme: {{ .Values.readinessProbe.httpGet.scheme }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/run/etcd
+            {{- if .Values.securityContext.readOnlyRootFilesystem }}
+            - name: tmp
+              mountPath: /tmp
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .Values.securityContext.readOnlyRootFilesystem }}
+        - name: tmp
+          emptyDir: {}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- else }}
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  {{- end }}
