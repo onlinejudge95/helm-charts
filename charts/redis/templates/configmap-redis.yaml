@@ -21,6 +21,9 @@ data:
     tls-ca-cert-file /certs/{{ .Values.tls.caCertFilename }}
     {{- end }}
     tls-auth-clients {{ if .Values.tls.authClients }}yes{{ else }}no{{ end }}
+    {{- if eq .Values.architecture "sentinel" }}
+    tls-replication yes
+    {{- end }}
     {{- else }}
     port {{ .Values.service.port }}
     {{- end }}
