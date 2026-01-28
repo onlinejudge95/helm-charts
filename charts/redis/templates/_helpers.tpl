@@ -109,13 +109,6 @@ Return Redis password
 {{- end }}
 
 {{/*
-Return the master service name
-*/}}
-{{- define "redis.masterService" -}}
-{{- printf "%s-master" (include "redis.fullname" .) -}}
-{{- end }}
-
-{{/*
 Return the headless service name
 */}}
 {{- define "redis.headlessService" -}}
