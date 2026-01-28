@@ -94,6 +94,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            {{- if .Values.auth.enabled }}
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "redis.password" . }}
+                  key: {{ .Values.auth.passwordKey }}
+            {{- end }}
             {{- with .Values.redis.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -103,12 +110,7 @@ spec:
               command:
                 - sh
                 - -c
-                - |
-                  {{- if .Values.auth.enabled }}
-                  redis-cli -a $(cat /secrets/{{ .Values.auth.passwordKey }}) ping
-                  {{- else }}
-                  redis-cli ping
-                  {{- end }}
+                - redis-cli ping
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
@@ -121,12 +123,7 @@ spec:
               command:
                 - sh
                 - -c
-                - |
-                  {{- if .Values.auth.enabled }}
-                  redis-cli -a $(cat /secrets/{{ .Values.auth.passwordKey }}) ping
-                  {{- else }}
-                  redis-cli ping
-                  {{- end }}
+                - redis-cli ping
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}

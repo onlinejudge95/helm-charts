@@ -257,14 +257,13 @@ kubectl run redis-client --rm -it --restart=Never \
   -p 26379 \
   sentinel get-master-addr-by-name my-redis-master
 
-# Connect to master
+# Connect to master (using REDISCLI_AUTH for security)
 kubectl run redis-client --rm -it --restart=Never \
   --image=redis:7.2.4-alpine \
-  --env REDIS_PASSWORD=$REDIS_PASSWORD \
+  --env REDISCLI_AUTH=$REDIS_PASSWORD \
   --command -- redis-cli \
   -h my-redis.default.svc.cluster.local \
-  -p 6379 \
-  -a $REDIS_PASSWORD
+  -p 6379
 ```
 
 ### Connect to Redis (Standalone Mode)
@@ -272,11 +271,10 @@ kubectl run redis-client --rm -it --restart=Never \
 ```bash
 kubectl run redis-client --rm -it --restart=Never \
   --image=redis:7.2.4-alpine \
-  --env REDIS_PASSWORD=$REDIS_PASSWORD \
+  --env REDISCLI_AUTH=$REDIS_PASSWORD \
   --command -- redis-cli \
   -h my-redis.default.svc.cluster.local \
-  -p 6379 \
-  -a $REDIS_PASSWORD
+  -p 6379
 ```
 
 ## Testing Failover (HA Mode)
@@ -306,8 +304,9 @@ kubectl get pods -l app.kubernetes.io/name=redis
 kubectl logs my-redis-0
 kubectl logs my-redis-sentinel-0
 
-# Check replication status
-kubectl exec -it my-redis-0 -- redis-cli -a $REDIS_PASSWORD info replication
+# Check replication status (using REDISCLI_AUTH for security)
+kubectl exec -it my-redis-0 --env REDISCLI_AUTH=$REDIS_PASSWORD -- \
+  redis-cli info replication
 ```
 
 ### Check Sentinel Status
