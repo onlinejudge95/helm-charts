@@ -70,6 +70,8 @@ helm uninstall my-redis
 | `nameOverride`            | String to partially override redis.name         | `""`            |
 | `fullnameOverride`        | String to fully override redis.fullname         | `""`            |
 
+> **Note**: The `architecture` parameter is validated and must be either `standalone` or `sentinel`. Invalid values will cause deployment to fail with a clear error message.
+
 ### Image Parameters
 
 | Name                | Description                          | Value           |

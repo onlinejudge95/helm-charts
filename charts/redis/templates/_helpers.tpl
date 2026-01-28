@@ -1,4 +1,14 @@
 {{/*
+Validate architecture value
+*/}}
+{{- define "redis.validateArchitecture" -}}
+{{- $validArchitectures := list "standalone" "sentinel" -}}
+{{- if not (has .Values.architecture $validArchitectures) -}}
+{{- fail (printf "Invalid architecture '%s'. Must be one of: %s" .Values.architecture (join ", " $validArchitectures)) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "redis.name" -}}
