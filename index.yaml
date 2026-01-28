@@ -67,4 +67,28 @@ entries:
     urls:
     - https://github.com/onlinejudge95/helm-charts/releases/download/flower-0.1.0/flower-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-27T06:23:45.050316668Z"
+  redis:
+  - apiVersion: v2
+    appVersion: 7.2.4
+    created: "2026-01-28T10:20:40.68252342Z"
+    description: A Helm chart for deploying Redis with High Availability using Redis
+      Sentinel
+    digest: 3a12c61b95478cb950ae7bc11c0612bb87f933ea7ecbc8434b89d313a3328a96
+    home: https://github.com/onlinejudge95/helm-charts
+    keywords:
+    - redis
+    - cache
+    - sentinel
+    - high-availability
+    - database
+    maintainers:
+    - email: onlinejudge95@gmail.com
+      name: onlinejudge95
+    name: redis
+    sources:
+    - https://github.com/redis/redis
+    type: application
+    urls:
+    - https://github.com/onlinejudge95/helm-charts/releases/download/redis-0.1.0/redis-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-01-28T10:20:40.68253429Z"
