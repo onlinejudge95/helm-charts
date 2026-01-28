@@ -148,6 +148,18 @@ sentinel:
     failureThreshold: 3
     successThreshold: 1
 
+  # Persistence for Sentinel data
+  persistence:
+    enabled: true
+    # Storage class
+    storageClass: ""
+    # Access mode
+    accessMode: ReadWriteOnce
+    # Size of persistent volume
+    size: 1Gi
+    # Annotations for PVC
+    annotations: {}
+
   # Resource limits for Sentinel
   resources:
     limits:

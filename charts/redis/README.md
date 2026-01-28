@@ -53,7 +53,10 @@ helm uninstall my-redis
 - 1 Redis master + N replicas (default: 3 total)
 - 3+ Sentinel instances for monitoring and failover
 - Automatic master election on failure
+- Persistent storage for Sentinel state (recommended)
 - Suitable for production
+
+> **Note**: Sentinel persistence is enabled by default to preserve failover history and replica knowledge across pod restarts. This improves stability during recovery scenarios.
 
 ## Parameters
 
@@ -129,9 +132,14 @@ helm uninstall my-redis
 | `sentinel.readinessProbe.timeoutSeconds`| Timeout for readiness probe                | `3`                |
 | `sentinel.readinessProbe.failureThreshold`| Failure threshold for readiness probe   | `3`                |
 | `sentinel.readinessProbe.successThreshold`| Success threshold for readiness probe   | `1`                |
+| `sentinel.persistence.enabled`        | Enable persistence for Sentinel data         | `true`             |
+| `sentinel.persistence.storageClass`   | PVC Storage Class for Sentinel               | `""`               |
+| `sentinel.persistence.accessMode`     | PVC Access Mode for Sentinel                 | `ReadWriteOnce`    |
+| `sentinel.persistence.size`           | PVC Storage Request for Sentinel             | `1Gi`              |
+| `sentinel.persistence.annotations`    | PVC annotations for Sentinel                 | `{}`               |
 | `sentinel.resources`                  | Sentinel resource limits                     | See values.yaml    |
 
-### Persistence Parameters
+### Persistence Parameters (Redis Data)
 
 | Name                          | Description                              | Value           |
 | ----------------------------- | ---------------------------------------- | --------------- |

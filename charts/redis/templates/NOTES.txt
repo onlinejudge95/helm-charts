@@ -71,10 +71,18 @@ Redis has been deployed successfully!
 
 {{- if .Values.persistence.enabled }}
 
-{{ .Values.replicaCount }} persistent volume(s) have been created for data storage.
+{{ .Values.replicaCount }} persistent volume(s) have been created for Redis data storage.
 {{- else }}
 
 WARNING: Data persistence is disabled. All data will be lost on pod restart!
+{{- end }}
+
+{{- if and (eq .Values.architecture "sentinel") .Values.sentinel.persistence.enabled }}
+
+{{ .Values.sentinel.replicaCount }} persistent volume(s) have been created for Sentinel state.
+{{- else if eq .Values.architecture "sentinel" }}
+
+WARNING: Sentinel persistence is disabled. Sentinel state will be lost on pod restart!
 {{- end }}
 
 {{- if not .Values.auth.enabled }}

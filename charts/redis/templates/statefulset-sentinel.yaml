@@ -132,8 +132,10 @@ spec:
             name: {{ include "redis.fullname" . }}-sentinel-config
         - name: sentinel-tmp
           emptyDir: {}
+        {{- if not .Values.sentinel.persistence.enabled }}
         - name: sentinel-data
           emptyDir: {}
+        {{- end }}
         {{- if .Values.auth.enabled }}
         - name: redis-password
           secret:
@@ -157,4 +159,22 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- if .Values.sentinel.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: sentinel-data
+        {{- with .Values.sentinel.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.sentinel.persistence.accessMode }}
+        {{- if .Values.sentinel.persistence.storageClass }}
+        storageClassName: {{ .Values.sentinel.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.sentinel.persistence.size }}
+  {{- end }}
 {{- end }}
