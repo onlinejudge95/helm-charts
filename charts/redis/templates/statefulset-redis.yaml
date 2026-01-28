@@ -107,13 +107,24 @@ spec:
             {{- with .Values.redis.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+            - name: TLS_ENABLED
+              value: {{ .Values.tls.enabled | quote }}
+            - name: TLS_INSECURE
+              value: "true"
+            - name: TLS_AUTH_CLIENTS
+              value: {{ .Values.tls.authClients | quote }}
+            - name: TLS_CERT_FILENAME
+              value: {{ .Values.tls.certFilename | quote }}
+            - name: TLS_KEY_FILENAME
+              value: {{ .Values.tls.keyFilename | quote }}
+            - name: TLS_CA_CERT_FILENAME
+              value: {{ .Values.tls.caCertFilename | quote }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             exec:
               command:
-                - sh
-                - -c
-                - redis-cli {{ if .Values.tls.enabled }}--tls --insecure {{ if .Values.tls.authClients }}--cert /certs/{{ .Values.tls.certFilename }} --key /certs/{{ .Values.tls.keyFilename }} {{ end }}{{ if ne .Values.tls.caCertFilename "" }}--cacert /certs/{{ .Values.tls.caCertFilename }}{{ end }}{{ end }} ping
+                - /bin/sh
+                - /config/probe.sh
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
@@ -124,9 +135,8 @@ spec:
           readinessProbe:
             exec:
               command:
-                - sh
-                - -c
-                - redis-cli {{ if .Values.tls.enabled }}--tls --insecure {{ if .Values.tls.authClients }}--cert /certs/{{ .Values.tls.certFilename }} --key /certs/{{ .Values.tls.keyFilename }} {{ end }}{{ if ne .Values.tls.caCertFilename "" }}--cacert /certs/{{ .Values.tls.caCertFilename }}{{ end }}{{ end }} ping
+                - /bin/sh
+                - /config/probe.sh
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
@@ -140,6 +150,8 @@ spec:
               mountPath: /data
             - name: redis-tmp
               mountPath: /etc/redis
+            - name: config
+              mountPath: /config
             {{- if .Values.tls.enabled }}
             - name: tls-certs
               mountPath: /certs

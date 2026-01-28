@@ -5,6 +5,8 @@ metadata:
   labels:
     {{- include "redis.labels" . | nindent 4 }}
 data:
+  probe.sh: |
+{{- include "redis.probeScript" . | nindent 4 }}
   redis.conf: |
     # Redis configuration file
     
