@@ -1,3 +1,4 @@
+---
 # Default values for redis.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
@@ -36,7 +37,8 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # If not set and create is true, a name is generated using the
+  # fullname template
   name: ""
 
 # Pod annotations
@@ -83,22 +85,23 @@ redis:
     # maxmemory-policy noeviction
     # timeout 0
     # tcp-keepalive 300
-  
+
   # Max memory (e.g., "256mb", "1gb")
   maxMemory: ""
   # Max memory policy (noeviction, allkeys-lru, volatile-lru, etc.)
   maxMemoryPolicy: "noeviction"
-  
+
   # Persistence - RDB snapshots
   save:
     - "900 1"    # Save after 900 sec if at least 1 key changed
     - "300 10"   # Save after 300 sec if at least 10 keys changed
-    - "60 10000" # Save after 60 sec if at least 10000 keys changed
-  
+    # Save after 60 sec if at least 10000 keys changed
+    - "60 10000"
+
   # Append Only File (AOF) persistence
   appendonly: "yes"
   appendfsync: "everysec"
-  
+
   # Additional environment variables
   extraEnv: []
   # - name: REDIS_EXTRA_FLAGS
@@ -110,8 +113,8 @@ sentinel:
   enabled: true
   # Number of Sentinel replicas
   replicaCount: 3
-  # Quorum: minimum number of Sentinels that need to agree about master being down
-  # Should be: (sentinel.replicaCount / 2) + 1
+  # Quorum: minimum number of Sentinels that need to agree about
+  # master being down. Should be: (sentinel.replicaCount / 2) + 1
   quorum: 2
   # Milliseconds master should be unreachable to be considered down
   downAfterMilliseconds: 5000
@@ -119,14 +122,14 @@ sentinel:
   failoverTimeout: 180000
   # Milliseconds for parallel-syncs
   parallelSyncs: 1
-  
+
   # Sentinel port
   port: 26379
-  
+
   # Custom sentinel.conf configuration
   config: |
     # Additional sentinel configuration
-  
+
   # Resource limits for Sentinel
   resources:
     limits:
