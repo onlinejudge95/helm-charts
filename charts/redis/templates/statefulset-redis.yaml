@@ -113,7 +113,7 @@ spec:
               command:
                 - sh
                 - -c
-                - redis-cli ping
+                - redis-cli {{ if .Values.tls.enabled }}--tls --insecure {{ if .Values.tls.authClients }}--cert /certs/{{ .Values.tls.certFilename }} --key /certs/{{ .Values.tls.keyFilename }} {{ end }}{{ if ne .Values.tls.caCertFilename "" }}--cacert /certs/{{ .Values.tls.caCertFilename }}{{ end }}{{ end }} ping
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
@@ -126,7 +126,7 @@ spec:
               command:
                 - sh
                 - -c
-                - redis-cli ping
+                - redis-cli {{ if .Values.tls.enabled }}--tls --insecure {{ if .Values.tls.authClients }}--cert /certs/{{ .Values.tls.certFilename }} --key /certs/{{ .Values.tls.keyFilename }} {{ end }}{{ if ne .Values.tls.caCertFilename "" }}--cacert /certs/{{ .Values.tls.caCertFilename }}{{ end }}{{ end }} ping
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
@@ -140,6 +140,11 @@ spec:
               mountPath: /data
             - name: redis-tmp
               mountPath: /etc/redis
+            {{- if .Values.tls.enabled }}
+            - name: tls-certs
+              mountPath: /certs
+              readOnly: true
+            {{- end }}
             {{- if .Values.auth.enabled }}
             - name: redis-password
               mountPath: /secrets
@@ -160,6 +165,11 @@ spec:
             name: {{ include "redis.fullname" . }}-config
         - name: redis-tmp
           emptyDir: {}
+        {{- if .Values.tls.enabled }}
+        - name: tls-certs
+          secret:
+            secretName: {{ .Values.tls.existingSecret | default (printf "%s-tls" (include "redis.fullname" .)) }}
+        {{- end }}
         {{- if .Values.auth.enabled }}
         - name: redis-password
           secret:

@@ -10,7 +10,18 @@ data:
     
     # Network
     bind 0.0.0.0
+    {{- if .Values.tls.enabled }}
+    port 0
+    tls-port {{ .Values.service.port }}
+    tls-cert-file /certs/{{ .Values.tls.certFilename }}
+    tls-key-file /certs/{{ .Values.tls.keyFilename }}
+    {{- if ne .Values.tls.caCertFilename "" }}
+    tls-ca-cert-file /certs/{{ .Values.tls.caCertFilename }}
+    {{- end }}
+    tls-auth-clients {{ if .Values.tls.authClients }}yes{{ else }}no{{ end }}
+    {{- else }}
     port {{ .Values.service.port }}
+    {{- end }}
     tcp-backlog 511
     timeout 0
     tcp-keepalive 300
