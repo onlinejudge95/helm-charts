@@ -268,6 +268,8 @@ export REDIS_PASSWORD=$(kubectl get secret my-redis-auth -o jsonpath='{.data.red
 
 ### Connect to Redis (HA Mode)
 
+In Sentinel mode, clients should query Sentinel to discover the current master:
+
 ```bash
 # Get master address from Sentinel
 kubectl run redis-client --rm -it --restart=Never \
@@ -277,14 +279,22 @@ kubectl run redis-client --rm -it --restart=Never \
   -p 26379 \
   sentinel get-master-addr-by-name my-redis-master
 
-# Connect to master (using REDISCLI_AUTH for security)
+# Connect directly to the discovered master using its pod DNS
+# Example: my-redis-0.my-redis-headless.default.svc.cluster.local
 kubectl run redis-client --rm -it --restart=Never \
   --image=redis:7.2.4-alpine \
   --env REDISCLI_AUTH=$REDIS_PASSWORD \
   --command -- redis-cli \
-  -h my-redis.default.svc.cluster.local \
+  -h <master-pod-dns> \
   -p 6379
 ```
+
+**Note**: The regular service (`my-redis`) routes to all Redis instances (master and replicas) and is suitable for:
+- Read operations (can be served by replicas)
+- Sentinel-aware clients that query Sentinel internally
+- Load-balanced read traffic
+
+For write operations, always use Sentinel to discover the current master.
 
 ### Connect to Redis (Standalone Mode)
 

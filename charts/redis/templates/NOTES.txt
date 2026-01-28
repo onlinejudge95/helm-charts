@@ -15,25 +15,30 @@ Redis has been deployed successfully!
     -p {{ .Values.sentinel.port }} \
     sentinel get-master-addr-by-name {{ include "redis.masterName" . }}
 
-4. To connect to Redis master:
+4. To connect to the Redis master:
 
   {{- if .Values.auth.enabled }}
   export REDIS_PASSWORD=$(kubectl get secret {{ include "redis.password" . }} -o jsonpath="{.data.{{ .Values.auth.passwordKey }}}" | base64 -d)
   
+  # Use the master pod DNS from step 3
+  # Example: {{ include "redis.fullname" . }}-0.{{ include "redis.headlessService" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
   kubectl run redis-client --rm -it --restart=Never \
     --image={{ include "redis.image" . }} \
-    --env REDIS_PASSWORD=$REDIS_PASSWORD \
+    --env REDISCLI_AUTH=$REDIS_PASSWORD \
     --command -- redis-cli \
-    -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
-    -p {{ .Values.service.port }} \
-    -a $REDIS_PASSWORD
+    -h <master-pod-dns> \
+    -p {{ .Values.service.port }}
   {{- else }}
   kubectl run redis-client --rm -it --restart=Never \
     --image={{ include "redis.image" . }} \
     --command -- redis-cli \
-    -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
+    -h <master-pod-dns> \
     -p {{ .Values.service.port }}
   {{- end }}
+
+  Note: The service {{ include "redis.fullname" . }} routes to all Redis instances.
+        For writes, always connect to the master discovered via Sentinel.
+        For reads, you can use the service for load-balanced access.
 
 5. To check Sentinel status:
 

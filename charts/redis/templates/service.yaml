@@ -17,9 +17,6 @@ spec:
       name: redis
   selector:
     {{- include "redis.selectorLabels" . | nindent 4 }}
-    {{- if eq .Values.architecture "sentinel" }}
-    role: master
-    {{- end }}
 ---
 apiVersion: v1
 kind: Service
