@@ -1,0 +1,182 @@
+{{- if and (eq .Values.architecture "sentinel") .Values.sentinel.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "redis.fullname" . }}-sentinel
+  labels:
+    {{- include "redis.sentinelLabels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "redis.sentinelService" . }}
+  replicas: {{ .Values.sentinel.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "redis.sentinelSelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-sentinel.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "redis.sentinelSelectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "redis.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-sentinel
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "redis.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              # Copy config to writable location
+              cp /config/sentinel.conf /tmp/sentinel.conf
+              
+              {{- if .Values.auth.enabled }}
+              # Replace password placeholder
+              REDIS_PASSWORD=$(cat /secrets/{{ .Values.auth.passwordKey }})
+              sed -i "s/REDIS_PASSWORD/${REDIS_PASSWORD}/g" /tmp/sentinel.conf
+              {{- end }}
+              
+              echo "Sentinel configuration prepared"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: sentinel-tmp
+              mountPath: /tmp
+            {{- if .Values.auth.enabled }}
+            - name: redis-password
+              mountPath: /secrets
+              readOnly: true
+            {{- end }}
+      containers:
+        - name: sentinel
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "redis.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - redis-sentinel
+            - /etc/redis/sentinel.conf
+          ports:
+            - name: sentinel
+              containerPort: {{ .Values.sentinel.port }}
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          {{- if .Values.sentinel.livenessProbe.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -p {{ .Values.sentinel.port }} ping
+            initialDelaySeconds: {{ .Values.sentinel.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.sentinel.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.sentinel.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.sentinel.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.sentinel.livenessProbe.successThreshold }}
+          {{- end }}
+          {{- if .Values.sentinel.readinessProbe.enabled }}
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -p {{ .Values.sentinel.port }} ping
+            initialDelaySeconds: {{ .Values.sentinel.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.sentinel.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.sentinel.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.sentinel.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.sentinel.readinessProbe.successThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.sentinel.resources | nindent 12 }}
+          volumeMounts:
+            - name: sentinel-tmp
+              mountPath: /etc/redis
+            - name: sentinel-data
+              mountPath: /data
+            {{- if .Values.auth.enabled }}
+            - name: redis-password
+              mountPath: /secrets
+              readOnly: true
+            {{- end }}
+            {{- if .Values.securityContext.readOnlyRootFilesystem }}
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run/redis
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "redis.fullname" . }}-sentinel-config
+        - name: sentinel-tmp
+          emptyDir: {}
+        {{- if not .Values.sentinel.persistence.enabled }}
+        - name: sentinel-data
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.auth.enabled }}
+        - name: redis-password
+          secret:
+            secretName: {{ include "redis.password" . }}
+        {{- end }}
+        {{- if .Values.securityContext.readOnlyRootFilesystem }}
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.sentinel.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: sentinel-data
+        {{- with .Values.sentinel.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.sentinel.persistence.accessMode }}
+        {{- if .Values.sentinel.persistence.storageClass }}
+        storageClassName: {{ .Values.sentinel.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.sentinel.persistence.size }}
+  {{- end }}
+{{- end }}

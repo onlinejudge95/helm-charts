@@ -1,0 +1,39 @@
+{{- if and (eq .Values.architecture "sentinel") .Values.sentinel.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redis.fullname" . }}-sentinel-config
+  labels:
+    {{- include "redis.sentinelLabels" . | nindent 4 }}
+data:
+  sentinel.conf: |
+    # Sentinel configuration file
+    
+    # Network
+    bind 0.0.0.0
+    port {{ .Values.sentinel.port }}
+    
+    # General
+    daemonize no
+    pidfile /var/run/redis/sentinel.pid
+    loglevel notice
+    logfile ""
+    
+    # Sentinel monitoring
+    sentinel monitor {{ include "redis.masterName" . }} {{ include "redis.fullname" . }}-0.{{ include "redis.headlessService" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} {{ .Values.service.port }} {{ .Values.sentinel.quorum }}
+    
+    # Timeouts
+    sentinel down-after-milliseconds {{ include "redis.masterName" . }} {{ .Values.sentinel.downAfterMilliseconds }}
+    sentinel failover-timeout {{ include "redis.masterName" . }} {{ .Values.sentinel.failoverTimeout }}
+    sentinel parallel-syncs {{ include "redis.masterName" . }} {{ .Values.sentinel.parallelSyncs }}
+    
+    {{- if .Values.auth.enabled }}
+    # Authentication
+    sentinel auth-pass {{ include "redis.masterName" . }} REDIS_PASSWORD
+    {{- end }}
+    
+    # Custom configuration
+    {{- if .Values.sentinel.config }}
+    {{ .Values.sentinel.config | nindent 4 }}
+    {{- end }}
+{{- end }}

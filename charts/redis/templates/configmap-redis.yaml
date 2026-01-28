@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redis.fullname" . }}-config
+  labels:
+    {{- include "redis.labels" . | nindent 4 }}
+data:
+  redis.conf: |
+    # Redis configuration file
+    
+    # Network
+    bind 0.0.0.0
+    port {{ .Values.service.port }}
+    tcp-backlog 511
+    timeout 0
+    tcp-keepalive 300
+    
+    # General
+    daemonize no
+    supervised no
+    pidfile /var/run/redis/redis.pid
+    loglevel notice
+    logfile ""
+    databases 16
+    always-show-logo no
+    
+    {{- if .Values.redis.maxMemory }}
+    # Memory management
+    maxmemory {{ .Values.redis.maxMemory }}
+    maxmemory-policy {{ .Values.redis.maxMemoryPolicy }}
+    {{- end }}
+    
+    # Persistence - RDB
+    {{- if .Values.persistence.enabled }}
+    {{- range .Values.redis.save }}
+    save {{ . }}
+    {{- end }}
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /data
+    {{- else }}
+    save ""
+    {{- end }}
+    
+    # Persistence - AOF
+    {{- if .Values.persistence.enabled }}
+    appendonly {{ .Values.redis.appendonly }}
+    appendfilename "appendonly.aof"
+    appendfsync {{ .Values.redis.appendfsync }}
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    aof-use-rdb-preamble yes
+    {{- else }}
+    appendonly no
+    {{- end }}
+    
+    # Replication
+    {{- if eq .Values.architecture "sentinel" }}
+    replica-serve-stale-data yes
+    replica-read-only yes
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    repl-disable-tcp-nodelay no
+    replica-priority 100
+    {{- end }}
+    
+    {{- if .Values.auth.enabled }}
+    # Security
+    requirepass REDIS_PASSWORD
+    {{- if eq .Values.architecture "sentinel" }}
+    masterauth REDIS_PASSWORD
+    {{- end }}
+    {{- end }}
+    
+    # Limits
+    maxclients 10000
+    
+    # Lazy freeing
+    lazyfree-lazy-eviction no
+    lazyfree-lazy-expire no
+    lazyfree-lazy-server-del no
+    replica-lazy-flush no
+    
+    # Custom configuration
+    {{- if .Values.redis.config }}
+    {{ .Values.redis.config | nindent 4 }}
+    {{- end }}

@@ -1,0 +1,9 @@
+# CI test values for HA mode
+architecture: standalone
+replicaCount: 1
+auth:
+  enabled: true
+  password: "test-password"
+persistence:
+  enabled: true
+  size: 1Gi
