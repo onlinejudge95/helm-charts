@@ -162,7 +162,7 @@ helm uninstall my-redis
 
 | Name                                          | Description                                      | Value       |
 | --------------------------------------------- | ------------------------------------------------ | ----------- |
-| `podSecurityContext.fsGroup`                  | Group ID for the pod                             | `1000`      |
+| `podSecurityContext.fsGroup`                  | Group ID for the pod                             | `999`       |
 | `securityContext.capabilities.drop`           | Linux capabilities to drop                       | `["ALL"]`   |
 | `securityContext.readOnlyRootFilesystem`      | Mount root filesystem as read-only               | `true`      |
 | `securityContext.runAsNonRoot`                | Run container as non-root user                   | `true`      |
