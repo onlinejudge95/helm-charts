@@ -1,0 +1,195 @@
+# Default values for redis.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Architecture: standalone or sentinel
+# standalone: Single Redis instance
+# sentinel: Redis with Sentinel for HA
+architecture: "sentinel"
+
+# Number of Redis replicas (including master)
+# For HA, minimum 3 is recommended
+replicaCount: 3
+
+# Kubernetes cluster domain
+clusterDomain: "cluster.local"
+
+# Override the name of the chart
+nameOverride: ""
+# Override the full name of the release
+fullnameOverride: ""
+
+image:
+  # Docker image repository
+  repository: redis
+  # Image pull policy
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# Image pull secrets for private registries
+imagePullSecrets: []
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 999
+
+service:
+  # Service type (ClusterIP, NodePort, LoadBalancer)
+  type: ClusterIP
+  # Redis port
+  port: 6379
+  # Annotations for the service
+  annotations: {}
+
+# Authentication configuration
+auth:
+  # Enable password authentication
+  enabled: true
+  # Redis password (will be stored in a secret)
+  password: ""
+  # Use existing secret for password
+  existingSecret: ""
+  # Key in secret containing password
+  passwordKey: "redis-password"
+
+# Redis configuration
+redis:
+  # Custom redis.conf configuration
+  # These will be appended to the base configuration
+  config: |
+    # maxmemory <bytes>
+    # maxmemory-policy noeviction
+    # timeout 0
+    # tcp-keepalive 300
+  
+  # Max memory (e.g., "256mb", "1gb")
+  maxMemory: ""
+  # Max memory policy (noeviction, allkeys-lru, volatile-lru, etc.)
+  maxMemoryPolicy: "noeviction"
+  
+  # Persistence - RDB snapshots
+  save:
+    - "900 1"    # Save after 900 sec if at least 1 key changed
+    - "300 10"   # Save after 300 sec if at least 10 keys changed
+    - "60 10000" # Save after 60 sec if at least 10000 keys changed
+  
+  # Append Only File (AOF) persistence
+  appendonly: "yes"
+  appendfsync: "everysec"
+  
+  # Additional environment variables
+  extraEnv: []
+  # - name: REDIS_EXTRA_FLAGS
+  #   value: "--maxclients 10000"
+
+# Sentinel configuration (only used when architecture=sentinel)
+sentinel:
+  # Enable Sentinel
+  enabled: true
+  # Number of Sentinel replicas
+  replicaCount: 3
+  # Quorum: minimum number of Sentinels that need to agree about master being down
+  # Should be: (sentinel.replicaCount / 2) + 1
+  quorum: 2
+  # Milliseconds master should be unreachable to be considered down
+  downAfterMilliseconds: 5000
+  # Milliseconds for failover timeout
+  failoverTimeout: 180000
+  # Milliseconds for parallel-syncs
+  parallelSyncs: 1
+  
+  # Sentinel port
+  port: 26379
+  
+  # Custom sentinel.conf configuration
+  config: |
+    # Additional sentinel configuration
+  
+  # Resource limits for Sentinel
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Resource limits and requests for Redis
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Node selector for pod assignment
+nodeSelector: {}
+
+# Tolerations for pod assignment
+tolerations: []
+
+# Affinity for pod assignment
+affinity: {}
+
+# Liveness probe configuration
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+  successThreshold: 1
+
+# Readiness probe configuration
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+# Persistence for Redis data
+persistence:
+  enabled: true
+  # Storage class
+  storageClass: ""
+  # Access mode
+  accessMode: ReadWriteOnce
+  # Size of persistent volume
+  size: 8Gi
+  # Annotations for PVC
+  annotations: {}
+
+# Additional volumes
+extraVolumes: []
+
+# Additional volume mounts
+extraVolumeMounts: []
+
+# Update strategy
+updateStrategy:
+  type: RollingUpdate

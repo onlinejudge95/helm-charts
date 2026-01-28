@@ -1,0 +1,18 @@
+apiVersion: v2
+name: redis
+description: A Helm chart for deploying Redis with High Availability using Redis Sentinel
+type: application
+version: "0.1.0"
+appVersion: "7.2.4"
+keywords:
+  - redis
+  - cache
+  - sentinel
+  - high-availability
+  - database
+home: https://github.com/onlinejudge95/helm-charts
+sources:
+  - https://github.com/redis/redis
+maintainers:
+  - name: onlinejudge95
+    email: onlinejudge95@gmail.com

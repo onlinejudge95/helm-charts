@@ -1,0 +1,210 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "redis.fullname" . }}
+  labels:
+    {{- include "redis.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "redis.headlessService" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "redis.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-redis.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "redis.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "redis.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-redis
+          image: {{ include "redis.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              # Copy config to writable location
+              cp /config/redis.conf /tmp/redis.conf
+              
+              {{- if .Values.auth.enabled }}
+              # Replace password placeholder
+              REDIS_PASSWORD=$(cat /secrets/{{ .Values.auth.passwordKey }})
+              sed -i "s/REDIS_PASSWORD/${REDIS_PASSWORD}/g" /tmp/redis.conf
+              {{- end }}
+              
+              {{- if eq .Values.architecture "sentinel" }}
+              # Determine if this is master or replica
+              HOSTNAME=$(hostname)
+              if [ "${HOSTNAME##*-}" = "0" ]; then
+                echo "This is the master node"
+                # Master doesn't need replicaof
+              else
+                echo "This is a replica node"
+                # Add replicaof to config
+                echo "replicaof {{ include "redis.fullname" . }}-0.{{ include "redis.headlessService" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} {{ .Values.service.port }}" >> /tmp/redis.conf
+              fi
+              {{- end }}
+              
+              echo "Redis configuration prepared"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: redis-tmp
+              mountPath: /tmp
+            {{- if .Values.auth.enabled }}
+            - name: redis-password
+              mountPath: /secrets
+              readOnly: true
+            {{- end }}
+      containers:
+        - name: redis
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "redis.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - redis-server
+            - /etc/redis/redis.conf
+          ports:
+            - name: redis
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- with .Values.redis.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  {{- if .Values.auth.enabled }}
+                  redis-cli -a $(cat /secrets/{{ .Values.auth.passwordKey }}) ping
+                  {{- else }}
+                  redis-cli ping
+                  {{- end }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  {{- if .Values.auth.enabled }}
+                  redis-cli -a $(cat /secrets/{{ .Values.auth.passwordKey }}) ping
+                  {{- else }}
+                  redis-cli ping
+                  {{- end }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: redis-tmp
+              mountPath: /etc/redis
+            {{- if .Values.auth.enabled }}
+            - name: redis-password
+              mountPath: /secrets
+              readOnly: true
+            {{- end }}
+            {{- if .Values.securityContext.readOnlyRootFilesystem }}
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run/redis
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "redis.fullname" . }}-config
+        - name: redis-tmp
+          emptyDir: {}
+        {{- if .Values.auth.enabled }}
+        - name: redis-password
+          secret:
+            secretName: {{ include "redis.password" . }}
+        {{- end }}
+        {{- if .Values.securityContext.readOnlyRootFilesystem }}
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        {{- end }}
+        {{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}

@@ -1,0 +1,83 @@
+Redis has been deployed successfully!
+
+1. Redis is running in {{ .Values.architecture }} mode with {{ .Values.replicaCount }} replica(s).
+
+{{- if eq .Values.architecture "sentinel" }}
+
+2. Sentinel is deployed with {{ .Values.sentinel.replicaCount }} instance(s) for high availability.
+
+3. To get the Redis master address from Sentinel:
+
+  kubectl run redis-client --rm -it --restart=Never \
+    --image={{ include "redis.image" . }} \
+    --command -- redis-cli \
+    -h {{ include "redis.sentinelService" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
+    -p {{ .Values.sentinel.port }} \
+    sentinel get-master-addr-by-name {{ include "redis.masterName" . }}
+
+4. To connect to Redis master:
+
+  {{- if .Values.auth.enabled }}
+  export REDIS_PASSWORD=$(kubectl get secret {{ include "redis.password" . }} -o jsonpath="{.data.{{ .Values.auth.passwordKey }}}" | base64 -d)
+  
+  kubectl run redis-client --rm -it --restart=Never \
+    --image={{ include "redis.image" . }} \
+    --env REDIS_PASSWORD=$REDIS_PASSWORD \
+    --command -- redis-cli \
+    -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
+    -p {{ .Values.service.port }} \
+    -a $REDIS_PASSWORD
+  {{- else }}
+  kubectl run redis-client --rm -it --restart=Never \
+    --image={{ include "redis.image" . }} \
+    --command -- redis-cli \
+    -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
+    -p {{ .Values.service.port }}
+  {{- end }}
+
+5. To check Sentinel status:
+
+  kubectl exec -it {{ include "redis.fullname" . }}-sentinel-0 -- \
+    redis-cli -p {{ .Values.sentinel.port }} sentinel masters
+
+6. To test failover (delete master pod):
+
+  kubectl delete pod {{ include "redis.fullname" . }}-0
+  # Sentinel will automatically promote a replica to master
+
+{{- else }}
+
+2. To connect to Redis:
+
+  {{- if .Values.auth.enabled }}
+  export REDIS_PASSWORD=$(kubectl get secret {{ include "redis.password" . }} -o jsonpath="{.data.{{ .Values.auth.passwordKey }}}" | base64 -d)
+  
+  kubectl run redis-client --rm -it --restart=Never \
+    --image={{ include "redis.image" . }} \
+    --env REDIS_PASSWORD=$REDIS_PASSWORD \
+    --command -- redis-cli \
+    -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
+    -p {{ .Values.service.port }} \
+    -a $REDIS_PASSWORD
+  {{- else }}
+  kubectl run redis-client --rm -it --restart=Never \
+    --image={{ include "redis.image" . }} \
+    --command -- redis-cli \
+    -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }} \
+    -p {{ .Values.service.port }}
+  {{- end }}
+
+{{- end }}
+
+{{- if .Values.persistence.enabled }}
+
+{{ .Values.replicaCount }} persistent volume(s) have been created for data storage.
+{{- else }}
+
+WARNING: Data persistence is disabled. All data will be lost on pod restart!
+{{- end }}
+
+{{- if not .Values.auth.enabled }}
+
+WARNING: Authentication is disabled. Consider enabling it for production use!
+{{- end }}
