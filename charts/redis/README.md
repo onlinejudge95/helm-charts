@@ -117,6 +117,18 @@ helm uninstall my-redis
 | `sentinel.failoverTimeout`            | Failover timeout                             | `180000`           |
 | `sentinel.parallelSyncs`              | Number of parallel syncs                     | `1`                |
 | `sentinel.config`                     | Custom sentinel.conf configuration           | `""`               |
+| `sentinel.livenessProbe.enabled`      | Enable Sentinel liveness probe               | `true`             |
+| `sentinel.livenessProbe.initialDelaySeconds` | Initial delay for liveness probe      | `30`               |
+| `sentinel.livenessProbe.periodSeconds`| Period for liveness probe                    | `10`               |
+| `sentinel.livenessProbe.timeoutSeconds`| Timeout for liveness probe                  | `5`                |
+| `sentinel.livenessProbe.failureThreshold`| Failure threshold for liveness probe     | `5`                |
+| `sentinel.livenessProbe.successThreshold`| Success threshold for liveness probe     | `1`                |
+| `sentinel.readinessProbe.enabled`     | Enable Sentinel readiness probe              | `true`             |
+| `sentinel.readinessProbe.initialDelaySeconds`| Initial delay for readiness probe    | `10`               |
+| `sentinel.readinessProbe.periodSeconds`| Period for readiness probe                  | `5`                |
+| `sentinel.readinessProbe.timeoutSeconds`| Timeout for readiness probe                | `3`                |
+| `sentinel.readinessProbe.failureThreshold`| Failure threshold for readiness probe   | `3`                |
+| `sentinel.readinessProbe.successThreshold`| Success threshold for readiness probe   | `1`                |
 | `sentinel.resources`                  | Sentinel resource limits                     | See values.yaml    |
 
 ### Persistence Parameters
