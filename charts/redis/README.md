@@ -96,6 +96,8 @@ helm uninstall my-redis
 | `auth.existingSecret`             | Use existing secret for password         | `""`             |
 | `auth.passwordKey`                | Key in secret containing password        | `redis-password` |
 
+> **Important**: The generated secret has the `helm.sh/resource-policy: keep` annotation, which prevents Helm from deleting it during upgrades. This ensures the password remains stable across upgrades and prevents connection breakage. If you need to change the password, you must manually delete the secret before upgrading.
+
 ### Redis Configuration Parameters
 
 | Name                                  | Description                                  | Value              |
@@ -359,6 +361,22 @@ kubectl exec -it my-redis-sentinel-0 -- \
 
 ```bash
 helm upgrade my-redis ./charts/redis
+```
+
+### Password Management During Upgrades
+
+The Redis password secret is protected with the `helm.sh/resource-policy: keep` annotation. This means:
+
+- **Password is preserved**: The secret will not be deleted or regenerated during `helm upgrade`
+- **Existing connections continue working**: No disruption to applications using Redis
+- **To change the password**: You must manually delete the secret before upgrading:
+
+```bash
+# Delete the secret
+kubectl delete secret my-redis-auth
+
+# Upgrade with new password
+helm upgrade my-redis ./charts/redis --set auth.password="new-password"
 ```
 
 ## License
