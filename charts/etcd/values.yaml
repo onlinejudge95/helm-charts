@@ -88,15 +88,15 @@ persistence:
   size: 8Gi
   annotations: {}
 
-resources: {}
+resources:
   # We recommend setting requests and limits for production.
   # Defaults below are small for testing; production should use 2-4 cores and 8GB RAM.
-  # limits:
-  #   cpu: 500m
-  #   memory: 512Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 
 nodeSelector: {}
 
