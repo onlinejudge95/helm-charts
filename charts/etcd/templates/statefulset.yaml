@@ -77,17 +77,23 @@ spec:
           livenessProbe:
             exec:
               command:
-                - /bin/sh
-                - -ec
-                - etcdctl get / --prefix --keys-only --limit=1
+                - /usr/local/bin/etcdctl
+                - get
+                - /
+                - --prefix
+                - --keys-only
+                - --limit=1
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             exec:
               command:
-                - /bin/sh
-                - -ec
-                - etcdctl get / --prefix --keys-only --limit=1
+                - /usr/local/bin/etcdctl
+                - get
+                - /
+                - --prefix
+                - --keys-only
+                - --limit=1
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
