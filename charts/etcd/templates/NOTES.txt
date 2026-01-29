@@ -1,4 +1,4 @@
-Etcd {{ .Chart.Version }} has been deployed successfully!
+Etcd {{ .Chart.AppVersion }} has been deployed successfully!
 
 1. Architecture: {{ .Values.architecture }}
    Replicas: {{ if eq .Values.architecture "standalone" }}1{{ else }}{{ .Values.replicaCount }}{{ end }}
