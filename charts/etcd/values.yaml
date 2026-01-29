@@ -137,6 +137,6 @@ tls:
     # If true, uses existingSecret. If false, needs peerSecret.
     # For simplicity in this chart, we assume shared certs or just use existingSecret for both.
     # But ideally we separate. Let's keep it simple: single secret for now.
-    allowInsecure: false
+    clientCertAuth: true
   # Client certificate authentication
   clientCertAuth: false
