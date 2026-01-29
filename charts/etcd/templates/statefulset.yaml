@@ -120,11 +120,9 @@ spec:
                 - --cert=/etc/etcd/tls/tls.crt
                 - --key=/etc/etcd/tls/tls.key
                 {{- end }}
-                - get
-                - /
-                - --prefix
-                - --keys-only
-                - --limit=1
+                - endpoint
+                - health
+                - --endpoints={{ include "etcd.scheme" . }}://127.0.0.1:{{ .Values.etcd.clientPort }}
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
@@ -136,11 +134,9 @@ spec:
                 - --cert=/etc/etcd/tls/tls.crt
                 - --key=/etc/etcd/tls/tls.key
                 {{- end }}
-                - get
-                - /
-                - --prefix
-                - --keys-only
-                - --limit=1
+                - endpoint
+                - health
+                - --endpoints={{ include "etcd.scheme" . }}://127.0.0.1:{{ .Values.etcd.clientPort }}
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
