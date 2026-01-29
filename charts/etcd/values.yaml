@@ -101,6 +101,15 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     - labelSelector:
+  #         matchExpressions:
+  #           - key: app.kubernetes.io/name
+  #             operator: In
+  #             values:
+  #               - etcd
+  #       topologyKey: kubernetes.io/hostname
 
 # Authentication
 auth:
