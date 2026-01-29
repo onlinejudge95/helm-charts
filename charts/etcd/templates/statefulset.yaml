@@ -67,7 +67,7 @@ spec:
             - name: ETCD_TRUSTED_CA_FILE
               value: "/etc/etcd/tls/ca.crt"
             - name: ETCD_CLIENT_CERT_AUTH
-              value: {{ .Values.tls.clientCertAuth | quote }}
+              value: {{ .Values.tls.clientCertAuth | toString | quote }}
             
             # Peer TLS Configuration
             - name: ETCD_PEER_CERT_FILE
