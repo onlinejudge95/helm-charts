@@ -16,8 +16,10 @@ spec:
         {{- include "etcd.labels" . | nindent 8 }}
     spec:
       restartPolicy: OnFailure
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: auth-bootstrap
           # Use alpine as a helper since registry.k8s.io/etcd is distroless (no shell)
