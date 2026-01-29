@@ -56,6 +56,8 @@ spec:
               value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
             - name: ETCD_INITIAL_CLUSTER_TOKEN
               value: "etcd-cluster-token"
+            - name: ETCDCTL_API
+              value: "3"
             - name: ETCD_INITIAL_CLUSTER_STATE
               value: {{ .Values.etcd.initialClusterState }}
             
@@ -110,7 +112,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
-  {{- if and .Values.persistence.enabled (not (eq .Values.architecture "standalone")) }}
+  {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -121,22 +123,6 @@ spec:
       spec:
         accessModes:
           {{- toYaml .Values.persistence.accessModes | nindent 10 }}
-        storageClassName: {{ .Values.persistence.storageClass }}
-        resources:
-          requests:
-            storage: {{ .Values.persistence.size }}
-  {{- else if .Values.persistence.enabled }}
-  # Standalone PVC handling usually simpler for StatefulSet, 
-  # but reusing VolumeClaimTemplates works fine for replica=1 too.
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-        {{- with .Values.persistence.annotations }}
-        annotations:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      spec:
-        accessModes: {{ .Values.persistence.accessModes | toYaml | nindent 10 }}
         storageClassName: {{ .Values.persistence.storageClass }}
         resources:
           requests:
