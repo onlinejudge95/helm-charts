@@ -1,4 +1,4 @@
-{{- if .Values.auth.rbac.enabled -}}
+{{- if and .Values.auth.rbac.enabled .Values.auth.rbac.create -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
