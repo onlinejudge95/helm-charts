@@ -60,6 +60,14 @@ spec:
               value: "3"
             - name: ETCD_INITIAL_CLUSTER_STATE
               value: {{ .Values.etcd.initialClusterState }}
+            - name: ETCD_SNAPSHOT_COUNT
+              value: {{ .Values.etcd.snapshotCount | quote }}
+            - name: ETCD_ELECTION_TIMEOUT
+              value: {{ .Values.etcd.electionTimeout | quote }}
+            - name: ETCD_HEARTBEAT_INTERVAL
+              value: {{ .Values.etcd.heartbeatInterval | quote }}
+            - name: ETCD_AUTO_COMPACTION_RETENTION
+              value: {{ .Values.etcd.autoCompactionRetention | quote }}
             
             # HA Cluster Construction
             - name: ETCD_INITIAL_CLUSTER
