@@ -60,6 +60,13 @@ spec:
               value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
             - name: ETCD_INITIAL_CLUSTER_TOKEN
               value: "etcd-cluster-token"
+            {{- if .Values.auth.rbac.enabled }}
+            - name: ETCD_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }}
+                  key: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}
+            {{- end }}
             
             {{- if .Values.tls.enabled }}
             # TLS Configuration
@@ -126,6 +133,9 @@ spec:
             exec:
               command:
                 - /usr/local/bin/etcdctl
+                {{- if .Values.auth.rbac.enabled }}
+                - --user=root:$(ETCD_ROOT_PASSWORD)
+                {{- end }}
                 {{- if .Values.tls.enabled }}
                 - --cacert=/etc/etcd/tls/ca.crt
                 - --cert=/etc/etcd/tls/tls.crt
@@ -140,6 +150,9 @@ spec:
             exec:
               command:
                 - /usr/local/bin/etcdctl
+                {{- if .Values.auth.rbac.enabled }}
+                - --user=root:$(ETCD_ROOT_PASSWORD)
+                {{- end }}
                 {{- if .Values.tls.enabled }}
                 - --cacert=/etc/etcd/tls/ca.crt
                 - --cert=/etc/etcd/tls/tls.crt
