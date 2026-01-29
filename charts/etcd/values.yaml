@@ -110,7 +110,7 @@ auth:
     create: true
     # Root password (default: "etcd-root-password"). Should be overridden in production.
     rootPassword: "etcd-root-password"
-    # User existing secret for root password
+    # Use existing secret for root password
     existingSecret: ""
     existingSecretPasswordKey: "password"
 
