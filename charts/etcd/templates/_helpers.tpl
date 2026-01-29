@@ -60,3 +60,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Return the proper etcd scheme
+*/}}
+{{- define "etcd.scheme" -}}
+{{- if .Values.tls.enabled -}}
+https
+{{- else -}}
+http
+{{- end -}}
+{{- end -}}

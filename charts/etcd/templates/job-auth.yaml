@@ -27,19 +27,37 @@ spec:
             - name: ETCDCTL_API
               value: "3"
             - name: ETCDCTL_ENDPOINTS
-              value: "http://{{ include "etcd.fullname" . }}:{{ .Values.etcd.clientPort }}"
+              value: "{{ include "etcd.scheme" . }}://{{ include "etcd.fullname" . }}:{{ .Values.etcd.clientPort }}"
             - name: ETCD_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }}
                   key: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}
+            {{- if .Values.tls.enabled }}
+            - name: ETCDCTL_CACERT
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCDCTL_CERT
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCDCTL_KEY
+              value: "/etc/etcd/tls/tls.key"
+            {{- end }}
           volumeMounts:
             - name: script
               mountPath: /usr/local/bin/auth-bootstrap.sh
               subPath: auth-bootstrap.sh
+            {{- if .Values.tls.enabled }}
+            - name: tls
+              mountPath: /etc/etcd/tls
+              readOnly: true
+            {{- end }}
       volumes:
         - name: script
           configMap:
             name: {{ include "etcd.fullname" . }}-auth-script
             defaultMode: 0755
+        {{- if .Values.tls.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.existingSecret }}
+        {{- end }}
 {{- end }}

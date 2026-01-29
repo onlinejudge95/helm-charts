@@ -47,15 +47,38 @@ spec:
             - name: ETCD_DATA_DIR
               value: {{ .Values.etcd.dataDir }}
             - name: ETCD_LISTEN_PEER_URLS
-              value: "http://0.0.0.0:{{ .Values.etcd.peerPort }}"
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://0.0.0.0:{{ .Values.etcd.peerPort }}"
             - name: ETCD_LISTEN_CLIENT_URLS
-              value: "http://0.0.0.0:{{ .Values.etcd.clientPort }}"
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://0.0.0.0:{{ .Values.etcd.clientPort }}"
             - name: ETCD_ADVERTISE_CLIENT_URLS
-              value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }}"
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }}"
             - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
-              value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
             - name: ETCD_INITIAL_CLUSTER_TOKEN
               value: "etcd-cluster-token"
+            
+            {{- if .Values.tls.enabled }}
+            # TLS Configuration
+            - name: ETCD_CERT_FILE
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCD_KEY_FILE
+              value: "/etc/etcd/tls/tls.key"
+            - name: ETCD_TRUSTED_CA_FILE
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCD_CLIENT_CERT_AUTH
+              value: {{ .Values.tls.clientCertAuth | quote }}
+            
+            # Peer TLS Configuration
+            - name: ETCD_PEER_CERT_FILE
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCD_PEER_KEY_FILE
+              value: "/etc/etcd/tls/tls.key"
+            - name: ETCD_PEER_TRUSTED_CA_FILE
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCD_PEER_CLIENT_CERT_AUTH
+              value: "true"
+            {{- end }}
+            
             - name: ETCDCTL_API
               value: "3"
             - name: ETCD_INITIAL_CLUSTER_STATE
@@ -80,12 +103,22 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/run/etcd
+            {{- if .Values.tls.enabled }}
+            - name: tls
+              mountPath: /etc/etcd/tls
+              readOnly: true
+            {{- end }}
           
           # Probes
           livenessProbe:
             exec:
               command:
                 - /usr/local/bin/etcdctl
+                {{- if .Values.tls.enabled }}
+                - --cacert=/etc/etcd/tls/ca.crt
+                - --cert=/etc/etcd/tls/tls.crt
+                - --key=/etc/etcd/tls/tls.key
+                {{- end }}
                 - get
                 - /
                 - --prefix
@@ -97,6 +130,11 @@ spec:
             exec:
               command:
                 - /usr/local/bin/etcdctl
+                {{- if .Values.tls.enabled }}
+                - --cacert=/etc/etcd/tls/ca.crt
+                - --cert=/etc/etcd/tls/tls.crt
+                - --key=/etc/etcd/tls/tls.key
+                {{- end }}
                 - get
                 - /
                 - --prefix
@@ -119,11 +157,16 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if not .Values.persistence.enabled }}
       volumes:
+        {{- if not .Values.persistence.enabled }}
         - name: data
           emptyDir: {}
-      {{- end }}
+        {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.existingSecret }}
+        {{- end }}
 
   {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:

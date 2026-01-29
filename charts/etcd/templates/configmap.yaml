@@ -13,13 +13,13 @@ data:
     
     {{- if eq .Values.architecture "standalone" }}
       {{- $pod := printf "%s-0" $fullname }}
-      {{- $address := printf "http://%s.%s-headless.%s.svc.cluster.local:%s" $pod $fullname $namespace $port }}
+      {{- $address := printf "%s://%s.%s-headless.%s.svc.cluster.local:%s" (include "etcd.scheme" $) $pod $fullname $namespace $port }}
       {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
     {{- else }}
       {{- $replicas := .Values.replicaCount | int }}
       {{- range $i, $e := until $replicas }}
         {{- $pod := printf "%s-%d" $fullname $i }}
-        {{- $address := printf "http://%s.%s-headless.%s.svc.cluster.local:%s" $pod $fullname $namespace $port }}
+        {{- $address := printf "%s://%s.%s-headless.%s.svc.cluster.local:%s" (include "etcd.scheme" $) $pod $fullname $namespace $port }}
         {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
       {{- end }}
     {{- end }}

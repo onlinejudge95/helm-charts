@@ -113,3 +113,19 @@ auth:
     # User existing secret for root password
     existingSecret: ""
     existingSecretPasswordKey: "password"
+
+# TLS Configuration
+tls:
+  enabled: false
+  # Name of the existing secret containing certificates
+  # Expected keys: ca.crt, tls.crt, tls.key
+  existingSecret: ""
+  # Peer communication TLS settings
+  peer:
+    # Use the same secret as client-server?
+    # If true, uses existingSecret. If false, needs peerSecret.
+    # For simplicity in this chart, we assume shared certs or just use existingSecret for both.
+    # But ideally we separate. Let's keep it simple: single secret for now.
+    allowInsecure: false
+  # Client certificate authentication
+  clientCertAuth: false
