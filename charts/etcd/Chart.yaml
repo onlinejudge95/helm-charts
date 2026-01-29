@@ -8,5 +8,9 @@ keywords:
   - etcd
   - ha
   - kv-store
+home: https://github.com/onlinejudge95/helm-charts
+sources:
+  - https://github.com/etcd-io/etcd
 maintainers:
   - name: onlinejudge95
+    email: onlinejudge95@gmail.com
