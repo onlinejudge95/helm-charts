@@ -70,6 +70,29 @@ entries:
   redis:
   - apiVersion: v2
     appVersion: 7.2.4
+    created: "2026-01-29T05:24:25.202139978Z"
+    description: A Helm chart for deploying Redis with High Availability using Redis
+      Sentinel
+    digest: 76de106fc96954e2c0d6e05f6f54f0355564fe5464ae8a4fde0aa651e2dd9eb0
+    home: https://github.com/onlinejudge95/helm-charts
+    keywords:
+    - redis
+    - cache
+    - sentinel
+    - high-availability
+    - database
+    maintainers:
+    - email: onlinejudge95@gmail.com
+      name: onlinejudge95
+    name: redis
+    sources:
+    - https://github.com/redis/redis
+    type: application
+    urls:
+    - https://github.com/onlinejudge95/helm-charts/releases/download/redis-0.2.0/redis-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
+    appVersion: 7.2.4
     created: "2026-01-28T10:20:40.68252342Z"
     description: A Helm chart for deploying Redis with High Availability using Redis
       Sentinel
@@ -91,4 +114,4 @@ entries:
     urls:
     - https://github.com/onlinejudge95/helm-charts/releases/download/redis-0.1.0/redis-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-28T10:20:40.68253429Z"
+generated: "2026-01-29T05:24:25.202157951Z"
