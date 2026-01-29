@@ -81,6 +81,14 @@ spec:
               value: "/etc/etcd/tls/ca.crt"
             - name: ETCD_PEER_CLIENT_CERT_AUTH
               value: {{ not .Values.tls.peer.allowInsecure | toString | quote }}
+            
+            # Etcdctl TLS Configuration
+            - name: ETCDCTL_CACERT
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCDCTL_CERT
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCDCTL_KEY
+              value: "/etc/etcd/tls/tls.key"
             {{- end }}
             
             - name: ETCDCTL_API

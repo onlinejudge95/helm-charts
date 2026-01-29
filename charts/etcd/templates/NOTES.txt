@@ -17,24 +17,7 @@ Etcd {{ .Chart.AppVersion }} has been deployed successfully!
 
 4. To connect using etcdctl (ephemeral pod):
 
-   kubectl run etcd-client --rm -it --restart=Never \
-     --image={{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }} \
-     --env ETCDCTL_API=3 \
-     {{- if .Values.tls.enabled }}
-     --env ETCDCTL_CACERT=/etc/etcd/tls/ca.crt \
-     --env ETCDCTL_CERT=/etc/etcd/tls/tls.crt \
-     --env ETCDCTL_KEY=/etc/etcd/tls/tls.key \
-     --overrides='{ "apiVersion": "v1", "spec": { "volumes": [ { "name": "tls", "secret": { "secretName": "{{ .Values.tls.existingSecret }}" } } ], "containers": [ { "name": "etcd-client", "image": "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}", "volumeMounts": [ { "mountPath": "/etc/etcd/tls", "name": "tls", "readOnly": true } ] } ] } }' \
-     {{- end }}
-     {{- if .Values.auth.rbac.enabled }}
-     --env ETCD_ROOT_PASSWORD=$ETCD_ROOT_PASSWORD \
-     {{- end }}
-     --command -- /usr/local/bin/etcdctl \
-     --endpoints={{ include "etcd.scheme" . }}://{{ include "etcd.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }} \
-     {{- if .Values.auth.rbac.enabled }}
-     --user=root:$ETCD_ROOT_PASSWORD \
-     {{- end }}
-     endpoint health
+   kubectl exec -it {{ include "etcd.fullname" . }}-0 -n {{ .Release.Namespace }} -- /usr/local/bin/etcdctl endpoint health
 
 {{- if not .Values.persistence.enabled }}
 WARNING: Persistence is disabled. Data will be lost on pod restart.
