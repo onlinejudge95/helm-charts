@@ -41,8 +41,8 @@ replicaCount: 1
 |-----------|-------------|---------|
 | `architecture` | Cluster mode: `ha` or `standalone` | `ha` |
 | `replicaCount` | Number of replicas (for HA mode) | `3` |
-| `image.repository` | Etcd image repository | `quay.io/etcd-io/etcd` |
-| `image.tag` | Etcd image tag | `v3.5.10` |
+| `image.repository` | Etcd image repository | `registry.k8s.io/etcd` |
+| `image.tag` | Etcd image tag | `3.5.10-0` |
 | `etcd.dataDir` | Directory for data storage | `/var/run/etcd/default.etcd` |
 | `etcd.initialClusterState` | 'new' or 'existing' | `new` |
 | `auth.rbac.enabled` | Enable RBAC and Auth Bootstrapping | `true` |
