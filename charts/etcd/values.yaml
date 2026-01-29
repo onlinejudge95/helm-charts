@@ -89,9 +89,11 @@ persistence:
   annotations: {}
 
 resources: {}
+  # We recommend setting requests and limits for production.
+  # Defaults below are small for testing; production should use 2-4 cores and 8GB RAM.
   # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
+  #   cpu: 500m
+  #   memory: 512Mi
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
@@ -117,8 +119,8 @@ auth:
     enabled: true
     # Create root user and enable auth
     create: true
-    # Root password (default: "etcd-root-password"). Should be overridden in production.
-    rootPassword: "etcd-root-password"
+    # Root password should be overridden in production.
+    rootPassword: ""
     # Use existing secret for root password
     existingSecret: ""
     existingSecretPasswordKey: "password"
