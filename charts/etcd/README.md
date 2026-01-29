@@ -41,7 +41,7 @@ replicaCount: 1
 |-----------|-------------|---------|
 | `architecture` | Cluster mode: `ha` or `standalone` | `ha` |
 | `replicaCount` | Number of replicas (for HA mode) | `3` |
-| `image.repository` | Etcd image repository | `quay.io/coreos/etcd` |
+| `image.repository` | Etcd image repository | `quay.io/etcd-io/etcd` |
 | `image.tag` | Etcd image tag | `v3.5.10` |
 | `etcd.dataDir` | Directory for data storage | `/var/run/etcd/default.etcd` |
 | `etcd.initialClusterState` | 'new' or 'existing' | `new` |

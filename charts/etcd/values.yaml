@@ -7,7 +7,7 @@ architecture: ha
 replicaCount: 3
 
 image:
-  repository: quay.io/coreos/etcd
+  repository: quay.io/etcd-io/etcd
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v3.5.10"
