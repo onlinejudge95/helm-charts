@@ -45,6 +45,9 @@ replicaCount: 1
 | `image.tag` | Etcd image tag | `v3.5.10` |
 | `etcd.dataDir` | Directory for data storage | `/var/run/etcd/default.etcd` |
 | `etcd.initialClusterState` | 'new' or 'existing' | `new` |
+| `ingress.enabled` | Enable Ingress resource | `false` |
+| `ingress.hosts` | List of Ingress hosts | `[]` |
+| `ingress.tls` | Ingress TLS configuration | `[]` |
 | `persistence.enabled` | Enable persistent storage | `true` |
 | `persistence.size` | Size of persistent volume | `8Gi` |
 | `resources` | CPU/Memory resource requests/limits | `{}` |
