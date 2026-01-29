@@ -77,7 +77,8 @@ tls:
   certFilename: "tls.crt"
   # Key filename in the secret
   keyFilename: "tls.key"
-  # CA Certificate filename in the secret (leave empty for Let's Encrypt)
+  # CA Certificate filename in the secret. Leave empty to use system default CA certificates
+  # for verification (works for publicly trusted CAs, including Let's Encrypt).
   caCertFilename: ""
 
 # Authentication configuration
