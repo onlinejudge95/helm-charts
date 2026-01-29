@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "etcd.fullname" . }}-config
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+data:
+  initial-cluster: |
+    {{ $fullname := include "etcd.fullname" . }}
+    {{- $namespace := .Release.Namespace }}
+    {{- $port := .Values.etcd.peerPort | toString }}
+    {{- $initCluster := list }}
+    
+    {{- if eq .Values.architecture "standalone" }}
+      {{- printf "%s-0=http://%s-0.%s-headless.%s.svc.cluster.local:%s" $fullname $fullname $fullname $namespace $port }}
+    {{- else }}
+      {{- $replicas := .Values.replicaCount | int }}
+      {{- range $i, $e := until $replicas }}
+        {{- $pod := printf "%s-%d" $fullname $i }}
+        {{- $address := printf "http://%s.%s-headless.%s.svc.cluster.local:%s" $pod $fullname $namespace $port }}
+        {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
+      {{- end }}
+      {{- join "," $initCluster }}
+    {{- end }}

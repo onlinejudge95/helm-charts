@@ -1,0 +1,12 @@
+apiVersion: v2
+name: etcd
+description: A Helm chart for deploying Etcd with High Availability (HA)
+type: application
+version: 0.1.0
+appVersion: "3.5.10"
+keywords:
+  - etcd
+  - ha
+  - kv-store
+maintainers:
+  - name: onlinejudge95

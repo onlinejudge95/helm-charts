@@ -1,0 +1,91 @@
+# Default values for etcd.
+
+# Architecture mode: 'standalone' or 'ha'
+architecture: ha
+
+# Number of replicas (ignored if architecture is 'standalone')
+replicaCount: 3
+
+image:
+  repository: registry.k8s.io/etcd
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "3.5.10-0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 2379
+  # NodePort (only if type is NodePort)
+  # nodePort: 30000
+
+# Etcd configuration
+etcd:
+  # Directory where data is stored
+  dataDir: /var/run/etcd/default.etcd
+  # Peer port
+  peerPort: 2380
+  # Client port
+  clientPort: 2379
+  # Snapshot count
+  snapshotCount: 10000
+  # Election timeout (ms)
+  electionTimeout: 1000
+  # Heartbeat interval (ms)
+  heartbeatInterval: 100
+  # Initial Cluster State: 'new' or 'existing'
+  initialClusterState: new
+  # Auto Compaction Retention (hours). 0 to disable.
+  autoCompactionRetention: "1"
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  annotations: {}
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Authentication (Placeholder for future expansion)
+auth:
+  rbac:
+    enabled: false

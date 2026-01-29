@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "etcd.fullname" . }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "etcd.fullname" . }}-headless
+  replicas: {{ if eq .Values.architecture "standalone" }}1{{ else }}{{ .Values.replicaCount }}{{ end }}
+  selector:
+    matchLabels:
+      {{- include "etcd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "etcd.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "etcd.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: etcd
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: peer
+              containerPort: {{ .Values.etcd.peerPort }}
+              protocol: TCP
+            - name: client
+              containerPort: {{ .Values.etcd.clientPort }}
+              protocol: TCP
+          env:
+            - name: ETCD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: ETCD_DATA_DIR
+              value: {{ .Values.etcd.dataDir }}
+            - name: ETCD_LISTEN_PEER_URLS
+              value: "http://0.0.0.0:{{ .Values.etcd.peerPort }}"
+            - name: ETCD_LISTEN_CLIENT_URLS
+              value: "http://0.0.0.0:{{ .Values.etcd.clientPort }}"
+            - name: ETCD_ADVERTISE_CLIENT_URLS
+              value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }}"
+            - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+              value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
+            - name: ALLOW_NONE_AUTHENTICATION
+              value: "yes"
+            - name: ETCD_INITIAL_CLUSTER_TOKEN
+              value: "etcd-cluster-token"
+            - name: ETCD_INITIAL_CLUSTER_STATE
+              value: {{ .Values.etcd.initialClusterState }}
+            
+            # HA Cluster Construction
+            - name: ETCD_INITIAL_CLUSTER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "etcd.fullname" . }}-config
+                  key: initial-cluster
+
+          # volumeMounts for data and config
+          volumeMounts:
+            - name: data
+              mountPath: /var/run/etcd
+          
+          # Probes
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - etcdctl get / --prefix --keys-only --limit=1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - etcdctl get / --prefix --keys-only --limit=1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+  {{- if and .Values.persistence.enabled (not (eq .Values.architecture "standalone")) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: {{ .Values.persistence.accessModes | toYaml | nindent 10 }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- else if .Values.persistence.enabled }}
+  # Standalone PVC handling usually simpler for StatefulSet, 
+  # but reusing VolumeClaimTemplates works fine for replica=1 too.
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: {{ .Values.persistence.accessModes | toYaml | nindent 10 }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}
