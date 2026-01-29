@@ -5,12 +5,28 @@ metadata:
   labels:
     {{- include "redis.labels" . | nindent 4 }}
 data:
+  probe.sh: |
+{{- include "redis.probeScript" . | nindent 4 }}
   redis.conf: |
     # Redis configuration file
     
     # Network
     bind 0.0.0.0
+    {{- if .Values.tls.enabled }}
+    port 0
+    tls-port {{ .Values.service.port }}
+    tls-cert-file /certs/{{ .Values.tls.certFilename }}
+    tls-key-file /certs/{{ .Values.tls.keyFilename }}
+    {{- if ne .Values.tls.caCertFilename "" }}
+    tls-ca-cert-file /certs/{{ .Values.tls.caCertFilename }}
+    {{- end }}
+    tls-auth-clients {{ if .Values.tls.authClients }}yes{{ else }}no{{ end }}
+    {{- if eq .Values.architecture "sentinel" }}
+    tls-replication yes
+    {{- end }}
+    {{- else }}
     port {{ .Values.service.port }}
+    {{- end }}
     tcp-backlog 511
     timeout 0
     tcp-keepalive 300

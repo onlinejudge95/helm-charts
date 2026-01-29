@@ -8,6 +8,15 @@ Validate architecture value
 {{- end -}}
 {{- end -}}
 
+
+{{/*
+Validate TLS configuration
+*/}}
+{{- define "redis.validateTLS" -}}
+{{- if and .Values.tls.enabled (empty .Values.tls.existingSecret) -}}
+{{- fail "TLS is enabled but tls.existingSecret is not provided. You must create a secret containing the certificates and specify its name." -}}
+{{- end -}}
+{{- end -}}
 {{/*
 Expand the name of the chart.
 */}}

@@ -2,7 +2,7 @@ apiVersion: v2
 name: redis
 description: A Helm chart for deploying Redis with High Availability using Redis Sentinel
 type: application
-version: "0.1.0"
+version: "0.2.0"
 appVersion: "7.2.4"
 keywords:
   - redis

@@ -65,6 +65,22 @@ service:
   # Annotations for the service
   annotations: {}
 
+# TLS configuration
+tls:
+  # Enable TLS
+  enabled: false
+  # Require clients to authenticate with a certificate
+  authClients: false
+  # Existing secret containing the certificates
+  existingSecret: ""
+  # Certificate filename in the secret
+  certFilename: "tls.crt"
+  # Key filename in the secret
+  keyFilename: "tls.key"
+  # CA Certificate filename in the secret. Leave empty to use system default CA certificates
+  # for verification (works for publicly trusted CAs, including Let's Encrypt).
+  caCertFilename: ""
+
 # Authentication configuration
 auth:
   # Enable password authentication
