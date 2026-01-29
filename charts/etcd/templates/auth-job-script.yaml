@@ -22,12 +22,29 @@ data:
     echo "Etcd is ready."
 
     echo "Creating root user..."
-    # Check if auth is already enabled (to avoid error on re-run)
-    # Using '|| true' to prevent failure if already enabled or created
-    etcdctl user add root:$ETCD_ROOT_PASSWORD --interactive=false || echo "Root user creation failed or already exists"
+    # Capture output and exit code
+    if out=$(etcdctl user add root:$ETCD_ROOT_PASSWORD --interactive=false 2>&1); then
+      echo "Root user created."
+    else
+      if echo "$out" | grep -q "already exists"; then
+        echo "Root user already exists. Skipping."
+      else
+        echo "Failed to create root user: $out"
+        exit 1
+      fi
+    fi
     
     echo "Enabling authentication..."
-    etcdctl auth enable || echo "Auth enable failed or already enabled"
+    if out=$(etcdctl auth enable 2>&1); then
+      echo "Authentication enabled."
+    else
+      if echo "$out" | grep -q "auth is already enabled"; then
+         echo "Authentication already enabled. Skipping."
+      else
+         echo "Failed to enable authentication: $out"
+         exit 1
+      fi
+    fi
 
     echo "Auth bootstrap complete."
 {{- end }}
