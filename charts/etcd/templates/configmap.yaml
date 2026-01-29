@@ -6,17 +6,21 @@ metadata:
     {{- include "etcd.labels" . | nindent 4 }}
 data:
   initial-cluster: |-
-    {{- $fullname := include "etcd.fullname" . -}}
-    {{- $namespace := .Release.Namespace -}}
-    {{- $port := .Values.etcd.peerPort | toString -}}
-    {{- if eq .Values.architecture "standalone" -}}
-      {{- $pod := printf "%s-0" $fullname -}}
-      {{- printf "%s=%s://%s.%s-headless.%s.svc.cluster.local:%s" $pod (include "etcd.scheme" $) $pod $fullname $namespace $port -}}
-    {{- else -}}
-      {{- $replicas := .Values.replicaCount | int -}}
-      {{- range $i, $e := until $replicas -}}
-        {{- if gt $i 0 }},{{ end -}}
-        {{- $pod := printf "%s-%d" $fullname $i -}}
-        {{- printf "%s=%s://%s.%s-headless.%s.svc.cluster.local:%s" $pod (include "etcd.scheme" $) $pod $fullname $namespace $port -}}
-      {{- end -}}
-    {{- end -}}
+    {{ $fullname := include "etcd.fullname" . }}
+    {{- $namespace := .Release.Namespace }}
+    {{- $port := .Values.etcd.peerPort | toString }}
+    {{- $initCluster := list }}
+    
+    {{- if eq .Values.architecture "standalone" }}
+      {{- $pod := printf "%s-0" $fullname }}
+      {{- $address := printf "%s://%s.%s-headless.%s.svc.cluster.local:%s" (include "etcd.scheme" $) $pod $fullname $namespace $port }}
+      {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
+    {{- else }}
+      {{- $replicas := .Values.replicaCount | int }}
+      {{- range $i, $e := until $replicas }}
+        {{- $pod := printf "%s-%d" $fullname $i }}
+        {{- $address := printf "%s://%s.%s-headless.%s.svc.cluster.local:%s" (include "etcd.scheme" $) $pod $fullname $namespace $port }}
+        {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
+      {{- end }}
+    {{- end }}
+    {{- join "," $initCluster | nindent 4 }}
