@@ -1,6 +1,12 @@
 {{- if and .Values.tls.enabled (empty .Values.tls.existingSecret) -}}
 {{- fail "When tls.enabled is true, tls.existingSecret must be provided and not empty." -}}
 {{- end -}}
+{{- if eq .Values.architecture "ha" -}}
+  {{- $replicaCount := int .Values.replicaCount -}}
+  {{- if or (lt $replicaCount 3) (eq (mod $replicaCount 2) 0) -}}
+    {{- fail "In HA mode, replicaCount must be an odd number greater than or equal to 3." -}}
+  {{- end -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
