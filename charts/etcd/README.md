@@ -58,3 +58,7 @@ replicaCount: 1
 ## Headless Service
 
 The chart creates a Headless Service (`<release-name>-headless`) to manage internal peer discovery and consistent network identities for the StatefulSet pods.
+
+## Version Compatibility
+
+The Authentication Bootstrap Job uses `alpine:3.19` to provide a shell environment, installing the `etcd` package from Alpine's repositories. There is a potential risk that the version of `etcdctl` in Alpine may differ slightly from the Etcd version running in the cluster (`registry.k8s.io/etcd`). While usually compatible, please be aware of this potential version mismatch.
