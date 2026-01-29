@@ -11,6 +11,9 @@ spec:
     - port: {{ .Values.etcd.peerPort }}
       targetPort: peer
       name: peer
+    - port: {{ .Values.etcd.clientPort }}
+      targetPort: client
+      name: client
   selector:
     {{- include "etcd.selectorLabels" . | nindent 4 }}
 ---
