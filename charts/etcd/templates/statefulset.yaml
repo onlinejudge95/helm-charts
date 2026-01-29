@@ -77,7 +77,7 @@ spec:
             - name: ETCD_PEER_TRUSTED_CA_FILE
               value: "/etc/etcd/tls/ca.crt"
             - name: ETCD_PEER_CLIENT_CERT_AUTH
-              value: "true"
+              value: {{ not .Values.tls.peer.allowInsecure | toString | quote }}
             {{- end }}
             
             - name: ETCDCTL_API
