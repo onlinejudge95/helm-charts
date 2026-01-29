@@ -45,6 +45,9 @@ replicaCount: 1
 | `image.tag` | Etcd image tag | `v3.5.10` |
 | `etcd.dataDir` | Directory for data storage | `/var/run/etcd/default.etcd` |
 | `etcd.initialClusterState` | 'new' or 'existing' | `new` |
+| `auth.rbac.enabled` | Enable RBAC and Auth Bootstrapping | `true` |
+| `auth.rbac.create` | Auto-create root user | `true` |
+| `auth.rbac.rootPassword` | Root user password | `etcd-root-password` |
 | `ingress.enabled` | Enable Ingress resource | `false` |
 | `ingress.hosts` | List of Ingress hosts | `[]` |
 | `ingress.tls` | Ingress TLS configuration | `[]` |

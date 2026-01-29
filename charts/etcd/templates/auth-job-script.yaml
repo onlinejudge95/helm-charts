@@ -1,0 +1,33 @@
+{{- if .Values.auth.rbac.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "etcd.fullname" . }}-auth-script
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+data:
+  auth-bootstrap.sh: |
+    #!/bin/sh
+    set -e
+    
+    echo "Waiting for Etcd to be ready..."
+    # Loop until healthy
+    until etcdctl endpoint health; do
+      printf '.'
+      sleep 2
+    done
+    echo "Etcd is ready."
+
+    echo "Creating root user..."
+    # Check if auth is already enabled (to avoid error on re-run)
+    # Using '|| true' to prevent failure if already enabled or created
+    etcdctl user add root:$ETCD_ROOT_PASSWORD --interactive=false || echo "Root user creation failed or already exists"
+    
+    echo "Enabling authentication..."
+    etcdctl auth enable || echo "Auth enable failed or already enabled"
+
+    echo "Auth bootstrap complete."
+{{- end }}

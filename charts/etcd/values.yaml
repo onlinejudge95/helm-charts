@@ -102,7 +102,14 @@ tolerations: []
 
 affinity: {}
 
-# Authentication (Placeholder for future expansion)
+# Authentication
 auth:
   rbac:
-    enabled: false
+    enabled: true
+    # Create root user and enable auth
+    create: true
+    # Root password (default: "etcd-root-password"). Should be overridden in production.
+    rootPassword: "etcd-root-password"
+    # User existing secret for root password
+    existingSecret: ""
+    existingSecretPasswordKey: "password"

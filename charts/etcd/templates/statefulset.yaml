@@ -54,8 +54,6 @@ spec:
               value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }}"
             - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
               value: "http://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
-            - name: ALLOW_NONE_AUTHENTICATION
-              value: "yes"
             - name: ETCD_INITIAL_CLUSTER_TOKEN
               value: "etcd-cluster-token"
             - name: ETCD_INITIAL_CLUSTER_STATE

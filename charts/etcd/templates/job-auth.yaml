@@ -1,0 +1,45 @@
+{{- if .Values.auth.rbac.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "etcd.fullname" . }}-auth-bootstrap
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "etcd.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: auth-bootstrap
+          # Use alpine as a helper since quay.io/coreos/etcd is distroless (no shell)
+          image: "alpine:3.19"
+          command: ["/bin/sh", "-c", "apk add --no-cache etcd-ctl && /usr/local/bin/auth-bootstrap.sh"]
+          env:
+            - name: ETCDCTL_API
+              value: "3"
+            - name: ETCDCTL_ENDPOINTS
+              value: "http://{{ include "etcd.fullname" . }}:{{ .Values.etcd.clientPort }}"
+            - name: ETCD_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }}
+                  key: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}
+          volumeMounts:
+            - name: script
+              mountPath: /usr/local/bin/auth-bootstrap.sh
+              subPath: auth-bootstrap.sh
+      volumes:
+        - name: script
+          configMap:
+            name: {{ include "etcd.fullname" . }}-auth-script
+            defaultMode: 0755
+{{- end }}
