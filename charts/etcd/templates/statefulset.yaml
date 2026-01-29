@@ -116,6 +116,10 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: data
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       spec:
         accessModes: {{ .Values.persistence.accessModes | toYaml | nindent 10 }}
         storageClassName: {{ .Values.persistence.storageClass }}
@@ -128,6 +132,10 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: data
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       spec:
         accessModes: {{ .Values.persistence.accessModes | toYaml | nindent 10 }}
         storageClassName: {{ .Values.persistence.storageClass }}
