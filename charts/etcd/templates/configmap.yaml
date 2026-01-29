@@ -12,7 +12,9 @@ data:
     {{- $initCluster := list }}
     
     {{- if eq .Values.architecture "standalone" }}
-      {{- printf "%s-0=http://%s-0.%s-headless.%s.svc.cluster.local:%s" $fullname $fullname $fullname $namespace $port }}
+      {{- $pod := printf "%s-0" $fullname }}
+      {{- $address := printf "http://%s.%s-headless.%s.svc.cluster.local:%s" $pod $fullname $namespace $port }}
+      {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
     {{- else }}
       {{- $replicas := .Values.replicaCount | int }}
       {{- range $i, $e := until $replicas }}
@@ -20,5 +22,5 @@ data:
         {{- $address := printf "http://%s.%s-headless.%s.svc.cluster.local:%s" $pod $fullname $namespace $port }}
         {{- $initCluster = append $initCluster (printf "%s=%s" $pod $address) }}
       {{- end }}
-      {{- join "," $initCluster }}
     {{- end }}
+    {{- join "," $initCluster }}
