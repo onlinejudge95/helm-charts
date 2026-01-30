@@ -47,7 +47,7 @@ replicaCount: 1
 | `etcd.initialClusterState` | 'new' or 'existing' | `new` |
 | `auth.rbac.enabled` | Enable RBAC and Auth Bootstrapping | `true` |
 | `auth.rbac.create` | Auto-create root user | `true` |
-| `auth.rbac.rootPassword` | Root user password | `etcd-root-password` |
+| `auth.rbac.rootPassword` | Root user password | `""` |
 | `ingress.enabled` | Enable Ingress resource | `false` |
 | `ingress.hosts` | List of Ingress hosts | `[{"host": "chart-example.local", "paths": [...]}]` |
 | `ingress.tls` | Ingress TLS configuration | `[]` |
