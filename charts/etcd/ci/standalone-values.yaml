@@ -1,5 +1,5 @@
 architecture: standalone
-replicaCount: 1
+
 auth:
   rbac:
     enabled: false
