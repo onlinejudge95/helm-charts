@@ -135,6 +135,20 @@ spec:
             {{- end }}
           
           # Probes
+          startupProbe:
+            exec:
+              command:
+                - /usr/local/bin/etcdctl
+                {{- if .Values.auth.rbac.enabled }}
+                - --user=root:$(ETCD_ROOT_PASSWORD)
+                {{- end }}
+                - endpoint
+                - health
+                - --endpoints=http://127.0.0.1:{{ .Values.etcd.clientPort }}
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 5
           livenessProbe:
             exec:
               command:
