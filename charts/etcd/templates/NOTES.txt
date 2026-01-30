@@ -17,7 +17,7 @@ Etcd {{ .Chart.AppVersion }} has been deployed successfully!
 
 4. To connect using etcdctl (ephemeral pod):
 
-   kubectl exec -it {{ include "etcd.fullname" . }}-0 -n {{ .Release.Namespace }} -- /usr/local/bin/etcdctl endpoint health
+   kubectl exec -it {{ include "etcd.fullname" . }}-0 -n {{ .Release.Namespace }} -- /usr/local/bin/etcdctl{{ if .Values.auth.rbac.enabled }} --user root:$ETCD_ROOT_PASSWORD{{ end }} endpoint health
 
 {{- if not .Values.persistence.enabled }}
 WARNING: Persistence is disabled. Data will be lost on pod restart.
