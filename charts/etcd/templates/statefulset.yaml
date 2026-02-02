@@ -201,6 +201,13 @@ spec:
       {{- else if eq .Values.architecture "ha" }}
       affinity:
         podAntiAffinity:
+          {{- if eq .Values.podAntiAffinityPreset "hard" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                {{- include "etcd.selectorLabels" . | nindent 16 }}
+            topologyKey: kubernetes.io/hostname
+          {{- else }}
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100
             podAffinityTerm:
@@ -208,6 +215,7 @@ spec:
                 matchLabels:
                   {{- include "etcd.selectorLabels" . | nindent 18 }}
               topologyKey: kubernetes.io/hostname
+          {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:

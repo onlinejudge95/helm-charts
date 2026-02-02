@@ -61,6 +61,12 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# Pod Anti Affinity Preset
+# Allowed values: "soft" (preferred) or "hard" (required)
+podAntiAffinityPreset: "soft"
+  #    hosts:
+  #      - chart-example.local
+
 # Etcd configuration
 etcd:
   # Directory where data is stored
