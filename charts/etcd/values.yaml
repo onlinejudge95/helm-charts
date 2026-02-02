@@ -75,7 +75,13 @@ etcd:
   electionTimeout: 1000
   # Heartbeat interval (ms)
   heartbeatInterval: 100
-  # Initial Cluster State: 'new' or 'existing'
+  # Initial Cluster State: 'new' or 'existing'.
+  # - Use 'new' only when bootstrapping a brand new etcd cluster (no existing data).
+  # - Use 'existing' when reusing existing dataDir/PVCs, recovering a cluster,
+  #   or restarting pods for an already-initialized cluster.
+  # WARNING: Leaving this as 'new' for an existing cluster can cause cluster
+  # reconfiguration issues. Do not flip between 'new' and 'existing' once the
+  # cluster has been correctly bootstrapped.
   initialClusterState: new
   # Auto Compaction Retention (hours). 0 to disable.
   autoCompactionRetention: "1"
