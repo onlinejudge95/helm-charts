@@ -14,8 +14,15 @@ data:
     set -e
     
     echo "Waiting for Etcd to be ready..."
-    # Loop until healthy
+    MAX_RETRIES=150 # 5 minutes
+    RETRIES=0
     until etcdctl endpoint health; do
+      RETRIES=$((RETRIES+1))
+      if [ $RETRIES -gt $MAX_RETRIES ]; then
+        echo ""
+        echo "Error: Timed out waiting for Etcd to be ready after $((MAX_RETRIES * 2)) seconds."
+        exit 1
+      fi
       printf '.'
       sleep 2
     done
