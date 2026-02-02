@@ -103,7 +103,10 @@ etcd:
   # cluster has been correctly bootstrapped.
   initialClusterState: new
   # Auto Compaction Retention (hours). 0 to disable.
-  autoCompactionRetention: "1"
+  # "8" is a reasonable default for production to retain historical data
+  # while preventing excessive database growth.
+  # Adjust based on your workload's need for historical revision access.
+  autoCompactionRetention: "8"
 
 persistence:
   enabled: true
