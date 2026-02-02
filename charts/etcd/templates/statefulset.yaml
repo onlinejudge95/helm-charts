@@ -142,9 +142,14 @@ spec:
                 {{- if .Values.auth.rbac.enabled }}
                 - --user=root:$(ETCD_ROOT_PASSWORD)
                 {{- end }}
+                {{- if .Values.tls.enabled }}
+                - --cacert=/etc/etcd/tls/ca.crt
+                - --cert=/etc/etcd/tls/tls.crt
+                - --key=/etc/etcd/tls/tls.key
+                {{- end }}
                 - endpoint
                 - health
-                - --endpoints=http://127.0.0.1:{{ .Values.etcd.clientPort }}
+                - --endpoints={{ include "etcd.scheme" . }}://127.0.0.1:{{ .Values.etcd.clientPort }}
             initialDelaySeconds: 0
             periodSeconds: 10
             failureThreshold: 30
