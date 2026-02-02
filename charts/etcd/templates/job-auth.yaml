@@ -23,8 +23,8 @@ spec:
         - name: auth-bootstrap
           # Use alpine to provide a shell environment for the bootstrap script
           # WARN: This installs the latest etcd package from Alpine, which may differ from the cluster version.
-          image: "alpine:3.19"
-          command: ["/bin/sh", "-c", "apk add --no-cache etcd && /usr/local/bin/auth-bootstrap.sh"]
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["/bin/sh", "-c", "/usr/local/bin/auth-bootstrap.sh"]
           env:
             - name: ETCDCTL_API
               value: "3"
