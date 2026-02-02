@@ -32,7 +32,6 @@ For development or testing, you can deploy a single-node Etcd instance.
 
 ```yaml
 architecture: standalone
-replicaCount: 1
 ```
 
 ## Configuration
