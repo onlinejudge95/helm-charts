@@ -1,5 +1,26 @@
 apiVersion: v1
 entries:
+  etcd:
+  - apiVersion: v2
+    appVersion: 3.5.10-0
+    created: "2026-02-02T13:53:06.070643544Z"
+    description: A Helm chart for deploying Etcd with High Availability (HA)
+    digest: 644a04be6fb842a94dbd6d2a9164f9177dbb68f6a6c1fc9530ea6ef4ebdb15b1
+    home: https://github.com/onlinejudge95/helm-charts
+    keywords:
+    - etcd
+    - ha
+    - kv-store
+    maintainers:
+    - email: onlinejudge95@gmail.com
+      name: onlinejudge95
+    name: etcd
+    sources:
+    - https://github.com/etcd-io/etcd
+    type: application
+    urls:
+    - https://github.com/onlinejudge95/helm-charts/releases/download/etcd-0.1.0/etcd-0.1.0.tgz
+    version: 0.1.0
   flower:
   - apiVersion: v2
     appVersion: 2.0.1
@@ -114,4 +135,4 @@ entries:
     urls:
     - https://github.com/onlinejudge95/helm-charts/releases/download/redis-0.1.0/redis-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-29T05:24:25.202157951Z"
+generated: "2026-02-02T13:53:06.070658663Z"
