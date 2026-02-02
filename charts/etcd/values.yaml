@@ -72,8 +72,21 @@ etcd:
   # Snapshot count
   snapshotCount: 10000
   # Election timeout (ms)
+  # NOTE:
+  # - 1000ms is the etcd default and is suitable for low-latency, single-region clusters.
+  # - In high-latency or unreliable networks (for example, some cloud providers or
+  #   cross-region deployments), this may be too aggressive and can cause
+  #   unnecessary leader elections.
+  # - Consider increasing this value based on your network characteristics and
+  #   failure detection requirements.
   electionTimeout: 1000
   # Heartbeat interval (ms)
+  # NOTE:
+  # - 100ms is the etcd default and pairs with the election timeout above.
+  # - In higher-latency environments, you may want to increase this value
+  #   proportionally when tuning electionTimeout.
+  # - Always evaluate changes in a staging environment before applying them
+  #   to production clusters.
   heartbeatInterval: 100
   # Initial Cluster State: 'new' or 'existing'.
   # - Use 'new' only when bootstrapping a brand new etcd cluster (no existing data).
