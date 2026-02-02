@@ -10,7 +10,7 @@ Etcd {{ .Chart.AppVersion }} has been deployed successfully!
 {{- if .Values.auth.rbac.enabled }}
    User: root
    Password:
-     export ETCD_ROOT_PASSWORD=$(kubectl get secret {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }} -n {{ .Release.Namespace }} -o jsonpath="{.data.{{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}}" | base64 -d)
+     export ETCD_ROOT_PASSWORD=$(kubectl get secret {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }} -n {{ .Release.Namespace }} -o jsonpath="{.data.{{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}}" 2>/dev/null | base64 -d)
 {{- else }}
    Authentication is DISABLED.
 {{- end }}
