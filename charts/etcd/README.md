@@ -49,7 +49,7 @@ replicaCount: 1
 | `auth.rbac.create` | Auto-create root user | `true` |
 | `auth.rbac.rootPassword` | Root user password | `""` |
 | `ingress.enabled` | Enable Ingress resource | `false` |
-| `ingress.hosts` | List of Ingress hosts | `[{"host": "chart-example.local", "paths": [...]}]` |
+| `ingress.hosts` | List of Ingress hosts | `[{"host": "chart-example.local", "paths": [{"path": "/", "pathType": "ImplementationSpecific"}]}]` |
 | `ingress.tls` | Ingress TLS configuration | `[]` |
 | `persistence.enabled` | Enable persistent storage | `true` |
 | `persistence.size` | Size of persistent volume | `8Gi` |
