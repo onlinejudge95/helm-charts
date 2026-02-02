@@ -28,29 +28,34 @@ data:
     done
     echo "Etcd is ready."
 
+    # Create root user
     echo "Creating root user..."
-    # Capture output and exit code
-    if out=$(etcdctl user add root:$ETCD_ROOT_PASSWORD --interactive=false 2>&1); then
+    set +e
+    out=$(etcdctl user add root:$ETCD_ROOT_PASSWORD --interactive=false 2>&1)
+    res=$?
+    set -e
+    if [ $res -eq 0 ]; then
       echo "Root user created."
+    elif echo "$out" | grep -q "already exists"; then
+      echo "Root user already exists. Skipping."
     else
-      if echo "$out" | grep -q "already exists"; then
-        echo "Root user already exists. Skipping."
-      else
-        echo "Failed to create root user: $out"
-        exit 1
-      fi
+      echo "Failed to create root user: $out"
+      exit 1
     fi
     
+    # Enable authentication
     echo "Enabling authentication..."
-    if out=$(etcdctl auth enable 2>&1); then
+    set +e
+    out=$(etcdctl auth enable 2>&1)
+    res=$?
+    set -e
+    if [ $res -eq 0 ]; then
       echo "Authentication enabled."
+    elif echo "$out" | grep -q "auth is already enabled"; then
+      echo "Authentication already enabled. Skipping."
     else
-      if echo "$out" | grep -q "auth is already enabled"; then
-         echo "Authentication already enabled. Skipping."
-      else
-         echo "Failed to enable authentication: $out"
-         exit 1
-      fi
+      echo "Failed to enable authentication: $out"
+      exit 1
     fi
 
     echo "Auth bootstrap complete."
