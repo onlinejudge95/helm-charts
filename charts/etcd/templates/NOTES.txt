@@ -1,0 +1,24 @@
+Etcd {{ .Chart.AppVersion }} has been deployed successfully!
+
+1. Architecture: {{ .Values.architecture }}
+   Replicas: {{ if eq .Values.architecture "standalone" }}1{{ else }}{{ .Values.replicaCount }}{{ end }}
+
+2. Etcd Client Endpoint:
+   {{ include "etcd.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }}
+
+3. Credentials:
+{{- if .Values.auth.rbac.enabled }}
+   User: root
+   Password:
+     export ETCD_ROOT_PASSWORD=$(kubectl get secret {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }} -n {{ .Release.Namespace }} -o jsonpath="{.data.{{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}}" 2>/dev/null | base64 -d)
+{{- else }}
+   Authentication is DISABLED.
+{{- end }}
+
+4. To connect using etcdctl (ephemeral pod):
+
+   kubectl exec -it {{ include "etcd.fullname" . }}-0 -n {{ .Release.Namespace }} -- /usr/local/bin/etcdctl{{ if .Values.auth.rbac.enabled }} --user root:$ETCD_ROOT_PASSWORD{{ end }} endpoint health
+
+{{- if not .Values.persistence.enabled }}
+WARNING: Persistence is disabled. Data will be lost on pod restart.
+{{- end }}

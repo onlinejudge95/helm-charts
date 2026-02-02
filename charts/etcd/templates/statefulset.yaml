@@ -1,0 +1,252 @@
+{{- if and .Values.tls.enabled (empty .Values.tls.existingSecret) -}}
+{{- fail "When tls.enabled is true, tls.existingSecret must be provided and not empty." -}}
+{{- end -}}
+{{- if eq .Values.architecture "ha" -}}
+  {{- $replicaCount := int .Values.replicaCount -}}
+  {{- if or (lt $replicaCount 3) (eq (mod $replicaCount 2) 0) -}}
+    {{- fail "In HA mode, replicaCount must be an odd number greater than or equal to 3." -}}
+  {{- end -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "etcd.fullname" . }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "etcd.fullname" . }}-headless
+  replicas: {{ if eq .Values.architecture "standalone" }}1{{ else }}{{ .Values.replicaCount }}{{ end }}
+  selector:
+    matchLabels:
+      {{- include "etcd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "etcd.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "etcd.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: etcd
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/local/bin/etcd"]
+          ports:
+            - name: peer
+              containerPort: {{ .Values.etcd.peerPort }}
+              protocol: TCP
+            - name: client
+              containerPort: {{ .Values.etcd.clientPort }}
+              protocol: TCP
+          env:
+            - name: ETCD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: ETCD_DATA_DIR
+              value: {{ .Values.etcd.dataDir }}
+            - name: ETCD_LISTEN_PEER_URLS
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://0.0.0.0:{{ .Values.etcd.peerPort }}"
+            - name: ETCD_LISTEN_CLIENT_URLS
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://0.0.0.0:{{ .Values.etcd.clientPort }}"
+            - name: ETCD_ADVERTISE_CLIENT_URLS
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.clientPort }}"
+            - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+              value: "{{ if .Values.tls.enabled }}https{{ else }}http{{ end }}://$(ETCD_NAME).{{ include "etcd.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.etcd.peerPort }}"
+            - name: ETCD_INITIAL_CLUSTER_TOKEN
+              value: "etcd-cluster-token"
+            {{- if .Values.auth.rbac.enabled }}
+            - name: ETCD_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecret }}{{ else }}{{ include "etcd.fullname" . }}-root-password{{ end }}
+                  key: {{ if .Values.auth.rbac.existingSecret }}{{ .Values.auth.rbac.existingSecretPasswordKey }}{{ else }}password{{ end }}
+            {{- end }}
+            
+            {{- if .Values.tls.enabled }}
+            # TLS Configuration
+            - name: ETCD_CERT_FILE
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCD_KEY_FILE
+              value: "/etc/etcd/tls/tls.key"
+            - name: ETCD_TRUSTED_CA_FILE
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCD_CLIENT_CERT_AUTH
+              value: {{ .Values.tls.clientCertAuth | toString | quote }}
+            
+            # Peer TLS Configuration
+            - name: ETCD_PEER_CERT_FILE
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCD_PEER_KEY_FILE
+              value: "/etc/etcd/tls/tls.key"
+            - name: ETCD_PEER_TRUSTED_CA_FILE
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCD_PEER_CLIENT_CERT_AUTH
+              value: {{ .Values.tls.peer.clientCertAuth | toString | quote }}
+            
+            # Etcdctl TLS Configuration
+            - name: ETCDCTL_CACERT
+              value: "/etc/etcd/tls/ca.crt"
+            - name: ETCDCTL_CERT
+              value: "/etc/etcd/tls/tls.crt"
+            - name: ETCDCTL_KEY
+              value: "/etc/etcd/tls/tls.key"
+            {{- end }}
+            
+            - name: ETCDCTL_API
+              value: "3"
+            - name: ETCD_INITIAL_CLUSTER_STATE
+              value: {{ .Values.etcd.initialClusterState }}
+            - name: ETCD_SNAPSHOT_COUNT
+              value: {{ .Values.etcd.snapshotCount | quote }}
+            - name: ETCD_ELECTION_TIMEOUT
+              value: {{ .Values.etcd.electionTimeout | quote }}
+            - name: ETCD_HEARTBEAT_INTERVAL
+              value: {{ .Values.etcd.heartbeatInterval | quote }}
+            - name: ETCD_AUTO_COMPACTION_RETENTION
+              value: {{ .Values.etcd.autoCompactionRetention | quote }}
+            
+            # HA Cluster Construction
+            - name: ETCD_INITIAL_CLUSTER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "etcd.fullname" . }}-config
+                  key: initial-cluster
+
+          # volumeMounts for data and config
+          volumeMounts:
+            - name: data
+              mountPath: /var/run/etcd
+            {{- if .Values.tls.enabled }}
+            - name: tls
+              mountPath: /etc/etcd/tls
+              readOnly: true
+            {{- end }}
+          
+          # Probes
+          startupProbe:
+            exec:
+              command:
+                - /usr/local/bin/etcdctl
+                {{- if .Values.auth.rbac.enabled }}
+                - --user=root:$(ETCD_ROOT_PASSWORD)
+                {{- end }}
+                {{- if .Values.tls.enabled }}
+                - --cacert=/etc/etcd/tls/ca.crt
+                - --cert=/etc/etcd/tls/tls.crt
+                - --key=/etc/etcd/tls/tls.key
+                {{- end }}
+                - endpoint
+                - health
+                - --endpoints={{ include "etcd.scheme" . }}://127.0.0.1:{{ .Values.etcd.clientPort }}
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - /usr/local/bin/etcdctl
+                {{- if .Values.auth.rbac.enabled }}
+                - --user=root:$(ETCD_ROOT_PASSWORD)
+                {{- end }}
+                {{- if .Values.tls.enabled }}
+                - --cacert=/etc/etcd/tls/ca.crt
+                - --cert=/etc/etcd/tls/tls.crt
+                - --key=/etc/etcd/tls/tls.key
+                {{- end }}
+                - endpoint
+                - health
+                - --endpoints={{ include "etcd.scheme" . }}://127.0.0.1:{{ .Values.etcd.clientPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /usr/local/bin/etcdctl
+                {{- if .Values.auth.rbac.enabled }}
+                - --user=root:$(ETCD_ROOT_PASSWORD)
+                {{- end }}
+                {{- if .Values.tls.enabled }}
+                - --cacert=/etc/etcd/tls/ca.crt
+                - --cert=/etc/etcd/tls/tls.crt
+                - --key=/etc/etcd/tls/tls.key
+                {{- end }}
+                - endpoint
+                - health
+                - --endpoints={{ include "etcd.scheme" . }}://127.0.0.1:{{ .Values.etcd.clientPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      {{- else if eq .Values.architecture "ha" }}
+      affinity:
+        podAntiAffinity:
+          {{- if eq .Values.podAntiAffinityPreset "hard" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                {{- include "etcd.selectorLabels" . | nindent 16 }}
+            topologyKey: kubernetes.io/hostname
+          {{- else }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  {{- include "etcd.selectorLabels" . | nindent 18 }}
+              topologyKey: kubernetes.io/hostname
+          {{- end }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.existingSecret }}
+        {{- end }}
+
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}

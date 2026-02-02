@@ -1,0 +1,7 @@
+architecture: standalone
+
+auth:
+  rbac:
+    enabled: false
+persistence:
+  enabled: false

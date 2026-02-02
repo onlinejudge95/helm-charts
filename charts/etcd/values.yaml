@@ -1,0 +1,170 @@
+# Default values for etcd.
+
+# Architecture mode: 'standalone' or 'ha'
+architecture: ha
+
+# Number of replicas (ignored if architecture is 'standalone')
+replicaCount: 3
+
+image:
+  repository: registry.k8s.io/etcd
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "3.5.10-0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1001
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+
+service:
+  type: ClusterIP
+  port: 2379
+  # NodePort (only if type is NodePort)
+  # nodePort: 30000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# Pod Anti Affinity Preset
+# Allowed values: "soft" (preferred) or "hard" (required)
+podAntiAffinityPreset: "soft"
+  #    hosts:
+  #      - chart-example.local
+
+# Etcd configuration
+etcd:
+  # Directory where data is stored
+  dataDir: /var/run/etcd/default.etcd
+  # Peer port
+  peerPort: 2380
+  # Client port
+  clientPort: 2379
+  # Snapshot count
+  snapshotCount: 10000
+  # Election timeout (ms)
+  # NOTE:
+  # - 1000ms is the etcd default and is suitable for low-latency, single-region clusters.
+  # - In high-latency or unreliable networks (for example, some cloud providers or
+  #   cross-region deployments), this may be too aggressive and can cause
+  #   unnecessary leader elections.
+  # - Consider increasing this value based on your network characteristics and
+  #   failure detection requirements.
+  electionTimeout: 1000
+  # Heartbeat interval (ms)
+  # NOTE:
+  # - 100ms is the etcd default and pairs with the election timeout above.
+  # - In higher-latency environments, you may want to increase this value
+  #   proportionally when tuning electionTimeout.
+  # - Always evaluate changes in a staging environment before applying them
+  #   to production clusters.
+  heartbeatInterval: 100
+  # Initial Cluster State: 'new' or 'existing'.
+  # - Use 'new' only when bootstrapping a brand new etcd cluster (no existing data).
+  # - Use 'existing' when reusing existing dataDir/PVCs, recovering a cluster,
+  #   or restarting pods for an already-initialized cluster.
+  # WARNING: Leaving this as 'new' for an existing cluster can cause cluster
+  # reconfiguration issues. Do not flip between 'new' and 'existing' once the
+  # cluster has been correctly bootstrapped.
+  initialClusterState: new
+  # Auto Compaction Retention (hours). 0 to disable.
+  # "8" is a reasonable default for production to retain historical data
+  # while preventing excessive database growth.
+  # Adjust based on your workload's need for historical revision access.
+  autoCompactionRetention: "8"
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 32Gi
+  annotations: {}
+
+resources:
+  # We recommend setting requests and limits for production.
+  # Defaults below are small for testing; production should use 2-4 cores and 8GB RAM.
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     - labelSelector:
+  #         matchExpressions:
+  #           - key: app.kubernetes.io/name
+  #             operator: In
+  #             values:
+  #               - etcd
+  #       topologyKey: kubernetes.io/hostname
+
+# Authentication
+auth:
+  rbac:
+    enabled: true
+    # Create root user and enable auth
+    create: true
+    # Root password should be overridden in production.
+    rootPassword: ""
+    # Use existing secret for root password
+    existingSecret: ""
+    existingSecretPasswordKey: "password"
+
+# TLS Configuration
+tls:
+  enabled: false
+  # Name of the existing secret containing certificates
+  # Expected keys: ca.crt, tls.crt, tls.key
+  existingSecret: ""
+  # Peer communication TLS settings
+  peer:
+    # Use the same secret as client-server?
+    # If true, uses existingSecret. If false, needs peerSecret.
+    # For simplicity in this chart, we assume shared certs or just use existingSecret for both.
+    # But ideally we separate. Let's keep it simple: single secret for now.
+    clientCertAuth: true
+  # Client certificate authentication
+  clientCertAuth: false

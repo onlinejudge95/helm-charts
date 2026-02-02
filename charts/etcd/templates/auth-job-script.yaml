@@ -1,0 +1,62 @@
+{{- if and .Values.auth.rbac.enabled .Values.auth.rbac.create -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "etcd.fullname" . }}-auth-script
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  auth-bootstrap.sh: |
+    #!/bin/sh
+    set -e
+    
+    echo "Waiting for Etcd to be ready..."
+    MAX_RETRIES=150 # 5 minutes
+    RETRIES=0
+    until etcdctl endpoint health; do
+      RETRIES=$((RETRIES+1))
+      if [ $RETRIES -gt $MAX_RETRIES ]; then
+        echo ""
+        echo "Error: Timed out waiting for Etcd to be ready after $((MAX_RETRIES * 2)) seconds."
+        exit 1
+      fi
+      printf '.'
+      sleep 2
+    done
+    echo "Etcd is ready."
+
+    # Create root user
+    echo "Creating root user..."
+    set +e
+    out=$(etcdctl user add root:$ETCD_ROOT_PASSWORD --interactive=false 2>&1)
+    res=$?
+    set -e
+    if [ $res -eq 0 ]; then
+      echo "Root user created."
+    elif echo "$out" | grep -q "already exists"; then
+      echo "Root user already exists. Skipping."
+    else
+      echo "Failed to create root user: $out"
+      exit 1
+    fi
+    
+    # Enable authentication
+    echo "Enabling authentication..."
+    set +e
+    out=$(etcdctl auth enable 2>&1)
+    res=$?
+    set -e
+    if [ $res -eq 0 ]; then
+      echo "Authentication enabled."
+    elif echo "$out" | grep -q "auth is already enabled"; then
+      echo "Authentication already enabled. Skipping."
+    else
+      echo "Failed to enable authentication: $out"
+      exit 1
+    fi
+
+    echo "Auth bootstrap complete."
+{{- end }}
